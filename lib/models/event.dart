@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class FanZoneEvent {
+  final String firestoreId;
   final int id;
   final String clubId;
   final String club;
@@ -26,6 +27,7 @@ class FanZoneEvent {
   final List<String> tags;
 
   FanZoneEvent({
+    this.firestoreId = '',
     required this.id,
     required this.clubId,
     required this.club,
@@ -99,6 +101,40 @@ class FanZoneEvent {
   }
 
   double get fillPct => (supporters / capacity).clamp(0.0, 1.0);
+
+  factory FanZoneEvent.fromFirestore(
+    String docId,
+    Map<String, dynamic> data, {
+    required bool joined,
+    required int supporters,
+  }) {
+    return FanZoneEvent(
+      firestoreId: docId,
+      id: docId.hashCode,
+      clubId: data['clubId'] as String? ?? '',
+      club: data['club'] as String? ?? '',
+      sport: data['sport'] as String? ?? '',
+      emoji: data['emoji'] as String? ?? '🏟️',
+      match: data['match'] as String? ?? '',
+      level: data['level'] as String? ?? '',
+      date: data['date'] as String? ?? '',
+      time: data['time'] as String? ?? '',
+      venue: data['venue'] as String? ?? '',
+      address: data['address'] as String? ?? '',
+      lat: (data['lat'] as num?)?.toDouble() ?? 48.8566,
+      lng: (data['lng'] as num?)?.toDouble() ?? 2.3522,
+      description: data['description'] as String? ?? '',
+      supporters: supporters,
+      capacity: (data['capacity'] as num?)?.toInt() ?? 50,
+      joined: joined,
+      color: Color((data['colorHex'] as int?) ?? 0xFFFF8C00),
+      bgColor: Color((data['bgColorHex'] as int?) ?? 0xFFFFF5E0),
+      free: data['free'] as bool? ?? true,
+      price: (data['price'] as num?)?.toDouble(),
+      isNew: data['isNew'] as bool? ?? false,
+      tags: List<String>.from(data['tags'] as List? ?? []),
+    );
+  }
 }
 
 // ── Données de démo ──────────────────────────────────────────────

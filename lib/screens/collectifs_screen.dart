@@ -17,6 +17,24 @@ class Collectif {
     required this.emoji, required this.color, required this.bgColor,
     required this.description, required this.members, required this.joined,
   });
+
+  factory Collectif.fromFirestore(
+    String docId,
+    Map<String, dynamic> data, {
+    required bool joined,
+  }) {
+    return Collectif(
+      id: docId,
+      name: data['name'] as String? ?? '',
+      club: data['club'] as String? ?? '',
+      emoji: data['emoji'] as String? ?? '🎊',
+      color: Color((data['colorHex'] as int?) ?? 0xFFFF8C00),
+      bgColor: Color((data['bgColorHex'] as int?) ?? 0xFFFFF5E0),
+      description: data['description'] as String? ?? '',
+      members: (data['membersBase'] as int?) ?? 0,
+      joined: joined,
+    );
+  }
 }
 
 final sampleCollectifs = [
