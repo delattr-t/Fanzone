@@ -262,7 +262,7 @@ class _UserPin extends StatelessWidget {
       height: 24,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: FanZoneColors.primary.withOpacity(0.2),
+        color: FanZoneColors.primary.withValues(alpha:0.2),
         border: Border.all(color: FanZoneColors.primary, width: 2),
       ),
       child: Center(
@@ -295,12 +295,12 @@ class _EventPin extends StatelessWidget {
             color: event.color,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: event.joined ? Colors.white : Colors.white.withOpacity(0.3),
+              color: event.joined ? Colors.white : Colors.white.withValues(alpha:0.3),
               width: event.joined ? 2.5 : 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: event.color.withOpacity(0.5),
+                color: event.color.withValues(alpha:0.5),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -378,7 +378,7 @@ class _MapBadge extends StatelessWidget {
         border: Border.all(color: FanZoneColors.dark, width: 2.5),
         boxShadow: [
           BoxShadow(
-            color: FanZoneColors.dark.withOpacity(0.15),
+            color: FanZoneColors.dark.withValues(alpha:0.15),
             offset: const Offset(3, 3),
             blurRadius: 0,
           ),
@@ -412,7 +412,7 @@ class _EventPopup extends StatelessWidget {
         border: Border.all(color: FanZoneColors.dark, width: 2.5),
         boxShadow: [
           BoxShadow(
-            color: FanZoneColors.dark.withOpacity(0.2),
+            color: FanZoneColors.dark.withValues(alpha:0.2),
             offset: const Offset(4, 4),
             blurRadius: 0,
           ),
@@ -576,7 +576,7 @@ class _BottomStrip extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.transparent, FanZoneColors.background.withOpacity(0.95)],
+          colors: [Colors.transparent, FanZoneColors.background.withValues(alpha:0.95)],
         ),
       ),
       padding: const EdgeInsets.fromLTRB(0, 16, 0, 12),
@@ -599,7 +599,7 @@ class _BottomStrip extends StatelessWidget {
                   border: Border.all(color: FanZoneColors.dark, width: 2.5),
                   boxShadow: [
                     BoxShadow(
-                      color: FanZoneColors.dark.withOpacity(0.12),
+                      color: FanZoneColors.dark.withValues(alpha:0.12),
                       offset: const Offset(3, 3),
                       blurRadius: 0,
                     ),

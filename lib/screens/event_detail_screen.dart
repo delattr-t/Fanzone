@@ -206,7 +206,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     boxShadow: [
                       BoxShadow(
                         color: (ev.joined ? FanZoneColors.success : FanZoneColors.dark)
-                            .withOpacity(0.25),
+                            .withValues(alpha: 0.25),
                         offset: const Offset(4, 4),
                         blurRadius: 0,
                       ),
@@ -251,7 +251,7 @@ class _Block extends StatelessWidget {
         border: Border.all(color: FanZoneColors.dark, width: 2.5),
         boxShadow: [
           BoxShadow(
-            color: FanZoneColors.dark.withOpacity(0.08),
+            color: FanZoneColors.dark.withValues(alpha: 0.08),
             offset: const Offset(3, 3),
             blurRadius: 0,
           ),

@@ -125,7 +125,7 @@ class _CollectifCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: col.joined ? col.color : FanZoneColors.dark, width: 2.5),
         boxShadow: [BoxShadow(
-          color: (col.joined ? col.color : FanZoneColors.dark).withOpacity(0.15),
+          color: (col.joined ? col.color : FanZoneColors.dark).withValues(alpha: 0.15),
           offset: const Offset(3,3), blurRadius: 0,
         )],
       ),
@@ -164,7 +164,7 @@ class _CollectifCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: col.joined ? FanZoneColors.success : col.color, width: 2),
                           boxShadow: [BoxShadow(
-                            color: (col.joined ? FanZoneColors.success : col.color).withOpacity(0.25),
+                            color: (col.joined ? FanZoneColors.success : col.color).withValues(alpha: 0.25),
                             offset: const Offset(2,2), blurRadius: 0,
                           )],
                         ),

@@ -257,7 +257,7 @@ class _NavBtn extends StatelessWidget {
           color: FanZoneColors.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: FanZoneColors.dark, width: 2),
-          boxShadow: [BoxShadow(color: FanZoneColors.dark.withOpacity(0.15), offset: const Offset(2,2))],
+          boxShadow: [BoxShadow(color: FanZoneColors.dark.withValues(alpha: 0.15), offset: const Offset(2,2))],
         ),
         child: Center(
           child: Text(icon, style: const TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w900)),

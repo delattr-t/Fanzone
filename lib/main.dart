@@ -43,8 +43,8 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  // État global des events (partagé entre tous les écrans)
-  final List<FanZoneEvent> _events = sampleEvents;
+  // Copie indépendante pour ne pas muter la liste source
+  final List<FanZoneEvent> _events = List.from(sampleEvents);
 
   void _toggleJoin(int eventId) {
     setState(() {

@@ -26,7 +26,7 @@ class EventCard extends StatelessWidget {
           border: Border.all(color: FanZoneColors.dark, width: 2.5),
           boxShadow: [
             BoxShadow(
-              color: FanZoneColors.dark.withOpacity(0.15),
+              color: FanZoneColors.dark.withValues(alpha: 0.15),
               offset: const Offset(3, 3),
               blurRadius: 0,
             ),
@@ -126,26 +126,6 @@ class EventCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // Vibe pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: event.vibeBgColor,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: event.vibeColor, width: 2),
-                    ),
-                    child: Text(
-                      event.vibeLabel,
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: event.vibeColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
                   // Barre de progression
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
@@ -220,7 +200,7 @@ class EventCard extends StatelessWidget {
                             boxShadow: [
                               BoxShadow(
                                 color: (event.joined ? FanZoneColors.success : FanZoneColors.dark)
-                                    .withOpacity(0.25),
+                                    .withValues(alpha: 0.25),
                                 offset: const Offset(2, 2),
                                 blurRadius: 0,
                               ),
