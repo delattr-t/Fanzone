@@ -8,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/collectifs_screen.dart';
 import 'screens/map_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,8 +44,11 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  // Copie indépendante pour ne pas muter la liste source
+  String _userName = 'Fan';
+
+  // Copies indépendantes pour ne pas muter les listes sources
   final List<FanZoneEvent> _events = List.from(sampleEvents);
+  final List<Collectif> _collectifs = List.from(sampleCollectifs);
 
   void _toggleJoin(int eventId) {
     setState(() {
@@ -57,7 +61,30 @@ class _MainShellState extends State<MainShell> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ev.joined ? '🎉 Tu rejoins le collectif !' : 'Tu as quitté le collectif',
+          ev.joined ? '🎉 Tu rejoins l\'event !' : 'Tu as quitté l\'event',
+          style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14),
+        ),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: FanZoneColors.dark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  void _toggleCollectif(String collectifId) {
+    setState(() {
+      final col = _collectifs.firstWhere((c) => c.id == collectifId);
+      col.joined = !col.joined;
+      col.members += col.joined ? 1 : -1;
+    });
+
+    final col = _collectifs.firstWhere((c) => c.id == collectifId);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          col.joined ? '🎊 Tu rejoins ${col.name} !' : 'Tu as quitté le collectif',
           style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14),
         ),
         duration: const Duration(seconds: 2),
@@ -71,12 +98,22 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-  final screens = [
-    HomeScreen(events: _events, onToggleJoin: _toggleJoin),
-    MapScreen(events: _events, onToggleJoin: _toggleJoin),  // ← nouveau
-    AgendaScreen(events: _events, onToggleJoin: _toggleJoin),
-    CollectifsScreen(),
-  ];
+    final screens = [
+      HomeScreen(events: _events, onToggleJoin: _toggleJoin),
+      MapScreen(events: _events, onToggleJoin: _toggleJoin),
+      AgendaScreen(events: _events, onToggleJoin: _toggleJoin),
+      CollectifsScreen(
+        collectifs: _collectifs,
+        onToggle: _toggleCollectif,
+      ),
+      ProfileScreen(
+        userName: _userName,
+        events: _events,
+        collectifs: _collectifs,
+        onToggleJoin: _toggleJoin,
+        onNameChanged: (name) => setState(() => _userName = name),
+      ),
+    ];
 
     return Scaffold(
       body: IndexedStack(
@@ -103,9 +140,10 @@ class _FanZoneBottomNav extends StatelessWidget {
 
   static const _items = [
     {'icon': '🏠', 'label': 'Accueil'},
-    {'icon': '🗺️', 'label': 'Carte'},      // ← nouveau
+    {'icon': '🗺️', 'label': 'Carte'},
     {'icon': '📅', 'label': 'Agenda'},
     {'icon': '🎊', 'label': 'Collectifs'},
+    {'icon': '👤', 'label': 'Profil'},
   ];
 
   @override
@@ -121,8 +159,8 @@ class _FanZoneBottomNav extends StatelessWidget {
           height: 64,
           child: Row(
             children: List.generate(_items.length, (i) {
-              final item    = _items[i];
-              final active  = i == currentIndex;
+              final item   = _items[i];
+              final active = i == currentIndex;
               return Expanded(
                 child: GestureDetector(
                   onTap: () => onTap(i),
@@ -132,9 +170,7 @@ class _FanZoneBottomNav extends StatelessWidget {
                     children: [
                       Text(
                         item['icon']!,
-                        style: TextStyle(
-                          fontSize: active ? 22 : 20,
-                        ),
+                        style: TextStyle(fontSize: active ? 22 : 20),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -148,7 +184,6 @@ class _FanZoneBottomNav extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      // Indicateur actif
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         width: active ? 20 : 0,

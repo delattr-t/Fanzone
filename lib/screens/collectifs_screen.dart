@@ -26,34 +26,19 @@ final sampleCollectifs = [
   Collectif(id:'col4', name:'Velo Squad 93',            club:'Cyclisme amateur', emoji:'🚴', color:const Color(0xFF0096FF), bgColor:const Color(0xFFE8F4FF), description:"On se poste aux cols et virages pour faire du bruit. Klaxons, sifflets et cris garantis !", members:12, joined:false),
 ];
 
-class CollectifsScreen extends StatefulWidget {
-  const CollectifsScreen({super.key});
+class CollectifsScreen extends StatelessWidget {
+  final List<Collectif> collectifs;
+  final Function(String) onToggle;
 
-  @override
-  State<CollectifsScreen> createState() => _CollectifsScreenState();
-}
-
-class _CollectifsScreenState extends State<CollectifsScreen> {
-  final List<Collectif> _collectifs = sampleCollectifs;
-
-  void _toggle(Collectif col) {
-    setState(() {
-      col.joined = !col.joined;
-      col.members += col.joined ? 1 : -1;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(col.joined ? '🎊 Tu rejoins ${col.name} !' : 'Tu as quitté le collectif'),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: FanZoneColors.dark,
-      ),
-    );
-  }
+  const CollectifsScreen({
+    super.key,
+    required this.collectifs,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final myCollectifs = _collectifs.where((c) => c.joined).toList();
+    final myCollectifs = collectifs.where((c) => c.joined).toList();
 
     return Scaffold(
       backgroundColor: FanZoneColors.background,
@@ -61,7 +46,6 @@ class _CollectifsScreenState extends State<CollectifsScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 80),
         children: [
-          // Mes collectifs recap
           if (myCollectifs.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
@@ -98,13 +82,13 @@ class _CollectifsScreenState extends State<CollectifsScreen> {
 
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
-            child: Text(
+            child: const Text(
               'Rejoins un collectif pour recevoir les convocations et organiser les déplacements !',
-              style: const TextStyle(fontFamily:'Nunito', fontSize:13, fontWeight:FontWeight.w600, color:FanZoneColors.textSecondary, height:1.5),
+              style: TextStyle(fontFamily:'Nunito', fontSize:13, fontWeight:FontWeight.w600, color:FanZoneColors.textSecondary, height:1.5),
             ),
           ),
 
-          ..._collectifs.map((col) => _CollectifCard(col: col, onToggle: () => _toggle(col))),
+          ...collectifs.map((col) => _CollectifCard(col: col, onToggle: () => onToggle(col.id))),
         ],
       ),
     );
@@ -131,7 +115,6 @@ class _CollectifCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Bande couleur
           Container(height: 6, decoration: BoxDecoration(
             color: col.color,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
