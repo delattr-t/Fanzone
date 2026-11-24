@@ -204,7 +204,7 @@ class _Masthead extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('FanZone', style: fzDisplay(fontSize: 38, fontWeight: FontWeight.w800, letterSpacing: -1)),
-                  Text('Salut $userName. On va faire du bruit où, ce week-end ?',
+                  Text('Salut $userName. On va faire du bruit où, ce week-end\u00A0?',
                       style: fz(fontSize: 14, color: FanZoneColors.cement)),
                 ],
               ),
