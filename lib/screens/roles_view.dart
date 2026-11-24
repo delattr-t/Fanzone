@@ -47,7 +47,7 @@ class RolesView extends StatelessWidget {
           final enabled = col.joined && !full;
           return Opacity(
             opacity: enabled || isMine ? 1 : 0.5,
-            child: GestureDetector(
+            child: Pressable(
               onTap: enabled ? () => state.setRole(col.id, isMine ? null : r.id) : null,
               child: StickerBlock(
                 margin: const EdgeInsets.only(bottom: 10),

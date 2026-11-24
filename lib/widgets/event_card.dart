@@ -20,7 +20,7 @@ class EventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = event;
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -108,7 +108,7 @@ class _JoinButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),

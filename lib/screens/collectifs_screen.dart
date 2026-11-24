@@ -74,7 +74,7 @@ class _CollectifCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: StickerBlock(
         margin: const EdgeInsets.only(bottom: 12),
@@ -99,7 +99,7 @@ class _CollectifCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                GestureDetector(
+                Pressable(
                   onTap: onToggle,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -80,7 +80,7 @@ class _CollectifDetailScreenState extends State<CollectifDetailScreen> with Sing
                       ),
                     ),
                     const SizedBox(width: 8),
-                    GestureDetector(
+                    Pressable(
                       onTap: _toggle,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

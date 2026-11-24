@@ -44,6 +44,39 @@ class StickerBlock extends StatelessWidget {
   }
 }
 
+/// Retour au toucher : léger retrait (0.97) pendant l'appui, retour rapide.
+class Pressable extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  final HitTestBehavior behavior;
+  const Pressable({super.key, required this.child, required this.onTap, this.behavior = HitTestBehavior.opaque});
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onTap != null;
+    return GestureDetector(
+      behavior: widget.behavior,
+      onTap: widget.onTap,
+      onTapDown: enabled ? (_) => setState(() => _down = true) : null,
+      onTapUp: enabled ? (_) => setState(() => _down = false) : null,
+      onTapCancel: enabled ? () => setState(() => _down = false) : null,
+      child: AnimatedScale(
+        scale: _down ? 0.97 : 1,
+        duration: Duration(milliseconds: _down ? 90 : 160),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 /// Petit intitulé au-dessus d'un bloc (phrase en minuscules, pas de capitales).
 class StickerLabel extends StatelessWidget {
   final String text;
@@ -100,7 +133,8 @@ class Monogram extends StatelessWidget {
   final String name;
   final Color color;
   final double size;
-  const Monogram({super.key, required this.name, required this.color, this.size = 40});
+  final bool onInk;
+  const Monogram({super.key, required this.name, required this.color, this.size = 40, this.onInk = false});
 
   static String initials(String name) {
     final words = name.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
@@ -111,19 +145,28 @@ class Monogram extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bar = (size * 0.12).clamp(4.0, 7.0);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: color,
+        color: FanZoneColors.paper,
         borderRadius: BorderRadius.circular(3),
         border: Border.all(color: FanZoneColors.ink, width: 1.5),
       ),
-      child: Center(
-        child: Text(
-          initials(name),
-          style: fzDisplay(fontSize: size * 0.48, color: Colors.white, letterSpacing: 0.5),
-        ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Text(
+                initials(name),
+                style: fzDisplay(fontSize: size * 0.46, color: FanZoneColors.ink, letterSpacing: 0.5),
+              ),
+            ),
+          ),
+          Container(height: bar, color: color),
+        ],
       ),
     );
   }
@@ -212,7 +255,7 @@ class StickerButton extends StatelessWidget {
     final disabled = onTap == null;
     return Opacity(
       opacity: disabled ? 0.4 : 1,
-      child: GestureDetector(
+      child: Pressable(
         onTap: onTap,
         child: Container(
           width: double.infinity,

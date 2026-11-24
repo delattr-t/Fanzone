@@ -78,9 +78,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: FanZoneColors.paper,
-      floatingActionButton: _PublishButton(
-        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateEventScreen())),
-      ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -88,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
               userName: state.userName,
               unread: state.unreadAlerts,
               onBell: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen())),
+              onPublish: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateEventScreen())),
             ),
           ),
 
@@ -188,7 +186,8 @@ class _Masthead extends StatelessWidget {
   final String userName;
   final int unread;
   final VoidCallback onBell;
-  const _Masthead({required this.userName, required this.unread, required this.onBell});
+  final VoidCallback onPublish;
+  const _Masthead({required this.userName, required this.unread, required this.onBell, required this.onPublish});
 
   @override
   Widget build(BuildContext context) {
@@ -204,16 +203,30 @@ class _Masthead extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('FanZone', style: fzDisplay(fontSize: 38, fontWeight: FontWeight.w800, letterSpacing: -1)),
-                  Text('Salut $userName. On va faire du bruit où, ce week-end\u00A0?',
+                  Text('Salut $userName. On fait du bruit où, ce week-end\u00A0?',
                       style: fz(fontSize: 14, color: FanZoneColors.cement)),
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: onBell,
-              behavior: HitTestBehavior.opaque,
+            Pressable(
+              onTap: onPublish,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: FanZoneColors.flare,
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: FanZoneColors.ink, width: 1.5),
+                ),
+                child: const Icon(Icons.add, size: 22, color: Colors.white),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Pressable(
+              onTap: onBell,
+              child: Container(
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
                   color: unread > 0 ? FanZoneColors.hiVis : FanZoneColors.paper,
                   borderRadius: BorderRadius.circular(3),
@@ -221,7 +234,7 @@ class _Masthead extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.notifications_none, size: 18),
+                    const Icon(Icons.notifications_none, size: 20),
                     if (unread > 0) ...[
                       const SizedBox(width: 4),
                       Text('$unread', style: fzDisplay(fontSize: 18)),
@@ -251,7 +264,7 @@ class _Poster extends StatelessWidget {
     final parts = e.match.split(RegExp(r'\s+vs\s+', caseSensitive: false));
     final home = parts.first;
     final away = parts.length > 1 ? parts[1] : null;
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 10, 16, 6),
@@ -291,7 +304,7 @@ class _Poster extends StatelessWidget {
                           style: fz(fontSize: 14, color: Colors.white70),
                         ),
                       ),
-                      GestureDetector(
+                      Pressable(
                         onTap: onJoin,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -443,7 +456,8 @@ class _ClubsStrip extends StatelessWidget {
         itemBuilder: (_, i) {
           final c = state.clubs[i];
           final following = state.isFollowing(c.id);
-          return GestureDetector(
+          return Pressable(
+            behavior: HitTestBehavior.deferToChild,
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id))),
             child: Container(
               width: 84,
@@ -488,30 +502,3 @@ class _ClubsStrip extends StatelessWidget {
   }
 }
 
-class _PublishButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _PublishButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: FanZoneColors.flare,
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: FanZoneColors.ink, width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.add, size: 18, color: Colors.white),
-            const SizedBox(width: 6),
-            Text('Publier un match', style: fz(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -61,6 +61,16 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
   void _shift(int delta) => setState(() => _month = DateTime(_month.year, _month.month + delta));
 
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return _month.year == now.year && _month.month == now.month;
+  }
+
+  void _today() {
+    final now = DateTime.now();
+    setState(() => _month = DateTime(now.year, now.month));
+  }
+
   @override
   Widget build(BuildContext context) {
     final monthEvents = _eventsInMonth();
@@ -71,9 +81,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
 
     return Scaffold(
       backgroundColor: FanZoneColors.paper,
-      appBar: AppBar(title: const Text('Agenda'), automaticallyImplyLeading: false),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+        padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 16, 16, 100),
         children: [
           Row(
             children: [
@@ -83,6 +92,10 @@ class _AgendaScreenState extends State<AgendaScreen> {
                   style: fzDisplay(fontSize: 34, fontWeight: FontWeight.w800),
                 ),
               ),
+              if (!_isCurrentMonth) ...[
+                _TextBtn(label: 'Aujourd\'hui', onTap: _today),
+                const SizedBox(width: 10),
+              ],
               _NavBtn(icon: Icons.chevron_left, onTap: () => _shift(-1)),
               const SizedBox(width: 6),
               _NavBtn(icon: Icons.chevron_right, onTap: () => _shift(1)),
@@ -172,6 +185,23 @@ class _AgendaScreenState extends State<AgendaScreen> {
   }
 }
 
+class _TextBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _TextBtn({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Text(
+        label,
+        style: fz(fontSize: 14, fontWeight: FontWeight.w600, decoration: TextDecoration.underline),
+      ),
+    );
+  }
+}
+
 class _NavBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -179,7 +209,7 @@ class _NavBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         width: 36,
