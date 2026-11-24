@@ -1,3 +1,4 @@
+import 'package:fanzone/data/local_repository.dart';
 import 'package:fanzone/data/local_store.dart';
 import 'package:fanzone/state/app_state.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,10 +11,13 @@ class _MemoryStore implements FanZoneStore {
   Future<void> save(Map<String, dynamic> d) async => data = d;
 }
 
+AppState _state(_MemoryStore store) =>
+    AppState(LocalRepository(store), alertsStore: _MemoryStore());
+
 void main() {
   test('rejoindre un event incrémente la jauge et persiste', () async {
     final store = _MemoryStore();
-    final state = AppState(store);
+    final state = _state(store);
     await state.load();
     await state.signIn('Thibaut');
 
@@ -22,9 +26,10 @@ void main() {
     await state.toggleJoinEvent(ev.id);
     expect(ev.joined, isTrue);
     expect(ev.supporters, before + 1);
+    expect(state.lastError, isNull);
 
     // Rechargement depuis le store : l'état est conservé.
-    final state2 = AppState(store);
+    final state2 = _state(store);
     await state2.load();
     expect(state2.userName, 'Thibaut');
     expect(state2.eventById(ev.id)!.joined, isTrue);
@@ -32,7 +37,7 @@ void main() {
   });
 
   test('un seul rôle par collectif, capacité respectée', () async {
-    final state = AppState(_MemoryStore());
+    final state = _state(_MemoryStore());
     await state.load();
     await state.signIn('Léa');
     final col = state.collectifs.first; // chef déjà pris (1/1)
@@ -47,7 +52,7 @@ void main() {
 
   test('vote sur un chant idempotent après rechargement', () async {
     final store = _MemoryStore();
-    final state = AppState(store);
+    final state = _state(store);
     await state.load();
     await state.signIn('Nico');
     final chant = state.chants.first;
@@ -55,10 +60,28 @@ void main() {
     await state.toggleVote(chant.id);
     expect(chant.votes, base + 1);
     await state.proposeChant(collectifId: chant.collectifId, title: 'Test', lyrics: 'la la', rhythm: '');
+    expect(state.chants.firstWhere((c) => c.title == 'Test').votes, 1);
 
-    final state2 = AppState(store);
+    final state2 = _state(store);
     await state2.load();
     expect(state2.chants.firstWhere((c) => c.id == chant.id).votes, base + 1);
     expect(state2.chants.firstWhere((c) => c.title == 'Test').votes, 1);
+  });
+
+  test('créer un event puis le rejoindre, compteur stable après rechargement', () async {
+    final store = _MemoryStore();
+    final state = _state(store);
+    await state.load();
+    await state.signIn('Sofia');
+    final draft = state.events.first.copyWith(id: 0);
+    final ev = await state.createEvent(draft);
+    expect(ev.supporters, 0);
+    await state.toggleJoinEvent(ev.id);
+    expect(state.eventById(ev.id)!.supporters, 1);
+
+    final state2 = _state(store);
+    await state2.load();
+    expect(state2.eventById(ev.id)!.supporters, 1);
+    expect(state2.eventById(ev.id)!.joined, isTrue);
   });
 }

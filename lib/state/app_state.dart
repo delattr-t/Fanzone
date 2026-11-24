@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 
 import '../data/local_store.dart';
+import '../data/repository.dart';
 import '../models/club.dart';
 import '../models/collectif.dart';
 import '../models/event.dart';
@@ -10,17 +12,24 @@ import '../models/social.dart';
 
 /// État global de l'app. Seule classe qui touche aux données :
 /// les écrans lisent via `AppScope.of(context)` et appellent ses méthodes.
+///
+/// Les écritures sont optimistes : l'UI est mise à jour immédiatement, puis
+/// la source de données ([FanZoneRepository]) est appelée. En cas d'échec,
+/// l'état est rechargé depuis la source et `lastError` est renseigné.
 class AppState extends ChangeNotifier {
-  AppState(this._store);
+  AppState(this._repo, {FanZoneStore? alertsStore})
+      : _alertsStore = alertsStore ?? LocalStore(key: 'fanzone_alerts_v1');
 
-  final FanZoneStore _store;
+  final FanZoneRepository _repo;
+  final FanZoneStore _alertsStore;
   final _rng = Random();
 
   bool loaded = false;
+  String? lastError;
   UserProfile? user;
 
   List<FanZoneEvent> events = [];
-  List<Club> clubs = List.of(sampleClubs);
+  List<Club> clubs = [];
   List<Collectif> collectifs = [];
   List<ChatMessage> messages = [];
   List<Chant> chants = [];
@@ -40,88 +49,108 @@ class AppState extends ChangeNotifier {
   // ── Chargement ────────────────────────────────────────────────
 
   Future<void> load() async {
-    final data = await _store.load();
-
-    events = buildSampleEvents();
-    collectifs = buildSampleCollectifs();
-    messages = buildSampleMessages();
-    chants = buildSampleChants();
-
-    if (data != null) {
-      final u = data['user'];
-      if (u is Map<String, dynamic>) user = UserProfile.fromJson(u);
-
-      for (final e in (data['createdEvents'] as List? ?? const [])) {
-        if (e is Map<String, dynamic>) events.add(FanZoneEvent.fromJson(e));
-      }
-      joinedEventIds.addAll(List<num>.from(data['joinedEventIds'] as List? ?? const []).map((n) => n.toInt()));
-      joinedCollectifIds.addAll(List<String>.from(data['joinedCollectifIds'] as List? ?? const []));
-      followedClubIds.addAll(List<String>.from(data['followedClubIds'] as List? ?? const []));
-      votedChantIds.addAll(List<String>.from(data['votedChantIds'] as List? ?? const []));
-      final roles = data['myRoles'];
-      if (roles is Map) {
-        roles.forEach((k, v) => myRoles[k.toString()] = v.toString());
-      }
-      for (final m in (data['userMessages'] as List? ?? const [])) {
-        if (m is Map<String, dynamic>) messages.add(ChatMessage.fromJson(m));
-      }
-      for (final c in (data['userChants'] as List? ?? const [])) {
-        if (c is Map<String, dynamic>) chants.add(Chant.fromJson(c));
-      }
-      for (final a in (data['alerts'] as List? ?? const [])) {
-        if (a is Map<String, dynamic>) alerts.add(FanAlert.fromJson(a));
-      }
+    try {
+      user = await _repo.currentUser();
+      await _loadAlerts();
+      if (user != null) await _refresh();
+      lastError = null;
+    } catch (e) {
+      lastError = 'Impossible de charger les données : $e';
     }
-
-    _applyMembership();
-    _generateReminders();
     loaded = true;
     notifyListeners();
   }
 
-  Map<String, dynamic> _toJson() => {
-        'user': user?.toJson(),
-        'createdEvents': events.where((e) => e.createdBy.isNotEmpty).map((e) => e.toJson()).toList(),
-        'joinedEventIds': joinedEventIds.toList(),
-        'joinedCollectifIds': joinedCollectifIds.toList(),
-        'followedClubIds': followedClubIds.toList(),
-        'myRoles': myRoles,
-        'votedChantIds': votedChantIds.toList(),
-        'userMessages': messages.where((m) => m.authorId == userId && userId.isNotEmpty).map((m) => m.toJson()).toList(),
-        'userChants': chants.where((c) => c.authorId == userId && userId.isNotEmpty).map((c) {
-          final j = c.toJson();
-          // Le vote de l'utilisateur est ré-appliqué au chargement : on stocke le compteur sans lui.
-          if (_voteApplied.contains(c.id)) j['votes'] = max(0, c.votes - 1);
-          return j;
-        }).toList(),
-        'alerts': alerts.map((a) => a.toJson()).toList(),
-      };
-
-  Future<void> _persist() async {
-    notifyListeners();
-    await _store.save(_toJson());
+  /// Recharge tout depuis la source de données.
+  Future<void> _refresh() async {
+    final s = await _repo.load();
+    user = s.user ?? user;
+    clubs = s.clubs;
+    collectifs = s.collectifs;
+    events = s.events;
+    chants = s.chants;
+    messages = s.messages;
+    joinedEventIds
+      ..clear()
+      ..addAll(s.joinedEventIds);
+    joinedCollectifIds
+      ..clear()
+      ..addAll(s.joinedCollectifIds);
+    followedClubIds
+      ..clear()
+      ..addAll(s.followedClubIds);
+    votedChantIds
+      ..clear()
+      ..addAll(s.votedChantIds);
+    myRoles
+      ..clear()
+      ..addAll(s.myRoles);
+    _eventApplied.clear();
+    _colApplied.clear();
+    _voteApplied.clear();
+    _applyMembership();
+    _generateReminders();
+    _generateNewEventAlerts();
   }
 
-  /// Recalcule `joined` / compteurs à partir des ensembles d'ids.
+  Future<void> refresh() async {
+    try {
+      await _refresh();
+      lastError = null;
+    } catch (e) {
+      lastError = 'Synchronisation impossible : $e';
+    }
+    notifyListeners();
+  }
+
+  /// Exécute une écriture ; en cas d'échec, recharge l'état depuis la source.
+  Future<void> _commit(Future<void> Function() write) async {
+    notifyListeners();
+    try {
+      await write();
+      lastError = null;
+    } catch (e) {
+      lastError = 'Action non enregistrée : $e';
+      try {
+        await _refresh();
+      } catch (_) {}
+      notifyListeners();
+    }
+  }
+
+  final Set<int> _eventApplied = {};
+  final Set<String> _colApplied = {};
+  final Set<String> _voteApplied = {};
+
+  /// Ajoute/retire la contribution de l'utilisateur aux compteurs, de façon idempotente.
   void _applyMembership() {
     for (final e in events) {
-      final wasJoined = e.joined;
-      e.joined = joinedEventIds.contains(e.id);
-      if (e.joined && !wasJoined) e.supporters += 1;
-      if (!e.joined && wasJoined) e.supporters -= 1;
+      final should = joinedEventIds.contains(e.id);
+      final has = _eventApplied.contains(e.id);
+      e.joined = should;
+      if (should && !has) {
+        e.supporters += 1;
+        _eventApplied.add(e.id);
+      } else if (!should && has) {
+        e.supporters = max(0, e.supporters - 1);
+        _eventApplied.remove(e.id);
+      }
     }
     for (final c in collectifs) {
-      final wasJoined = c.joined;
-      c.joined = joinedCollectifIds.contains(c.id);
-      if (c.joined && !wasJoined) c.members += 1;
-      if (!c.joined && wasJoined) c.members -= 1;
+      final should = joinedCollectifIds.contains(c.id);
+      final has = _colApplied.contains(c.id);
+      c.joined = should;
+      if (should && !has) {
+        c.members += 1;
+        _colApplied.add(c.id);
+      } else if (!should && has) {
+        c.members = max(0, c.members - 1);
+        _colApplied.remove(c.id);
+      }
     }
     _applyVotes();
   }
 
-  final Set<String> _voteApplied = {};
-
-  /// Ajoute/retire le vote de l'utilisateur aux compteurs, de façon idempotente.
   void _applyVotes() {
     for (final ch in chants) {
       final should = votedChantIds.contains(ch.id);
@@ -140,30 +169,45 @@ class AppState extends ChangeNotifier {
 
   Future<void> signIn(String name) async {
     final clean = name.trim().isEmpty ? 'Fan' : name.trim();
-    user ??= UserProfile(id: _newId('u'), name: clean, createdAt: DateTime.now());
-    user!.name = clean;
-    await _persist();
+    try {
+      user = await _repo.signIn(clean);
+      await _refresh();
+      lastError = null;
+    } catch (e) {
+      lastError = 'Connexion impossible : $e';
+    }
+    notifyListeners();
   }
 
   Future<void> updateName(String name) async {
     if (user == null) return;
     user!.name = name.trim().isEmpty ? 'Fan' : name.trim();
-    await _persist();
+    await _commit(() => _repo.updateName(user!.name));
   }
 
   Future<void> signOut() async {
     user = null;
+    events = [];
+    collectifs = [];
+    chants = [];
+    messages = [];
     joinedEventIds.clear();
     joinedCollectifIds.clear();
     followedClubIds.clear();
     myRoles.clear();
     votedChantIds.clear();
+    _eventApplied.clear();
+    _colApplied.clear();
+    _voteApplied.clear();
     alerts.clear();
-    events.removeWhere((e) => e.createdBy.isNotEmpty);
-    messages.removeWhere((m) => !m.id.startsWith('m'));
-    chants.removeWhere((c) => !c.id.startsWith('ch'));
-    _applyMembership();
-    await _persist();
+    await _saveAlerts();
+    notifyListeners();
+    try {
+      await _repo.signOut();
+    } catch (e) {
+      lastError = 'Déconnexion incomplète : $e';
+      notifyListeners();
+    }
   }
 
   // ── Events ───────────────────────────────────────────────────
@@ -185,53 +229,22 @@ class AppState extends ChangeNotifier {
   Future<void> toggleJoinEvent(int eventId) async {
     final ev = eventById(eventId);
     if (ev == null) return;
-    if (joinedEventIds.contains(eventId)) {
-      joinedEventIds.remove(eventId);
-      ev.joined = false;
-      ev.supporters = max(0, ev.supporters - 1);
-    } else {
-      joinedEventIds.add(eventId);
-      ev.joined = true;
-      ev.supporters += 1;
-    }
+    final join = !joinedEventIds.contains(eventId);
+    join ? joinedEventIds.add(eventId) : joinedEventIds.remove(eventId);
+    _applyMembership();
     _generateReminders();
-    await _persist();
+    await _commit(() => _repo.setEventJoined(eventId, join));
   }
 
   Future<FanZoneEvent> createEvent(FanZoneEvent draft) async {
     final club = clubById(draft.clubId);
-    final ev = FanZoneEvent(
-      id: DateTime.now().millisecondsSinceEpoch,
-      clubId: draft.clubId,
-      club: draft.club,
-      sport: draft.sport,
-      emoji: draft.emoji,
-      match: draft.match,
-      level: draft.level,
-      date: draft.date,
-      time: draft.time,
-      venue: draft.venue,
-      address: draft.address,
-      venueKind: draft.venueKind,
-      lat: draft.lat,
-      lng: draft.lng,
-      description: draft.description,
+    final prepared = draft.copyWith(
+      color: club?.color,
+      bgColor: club?.bgColor,
       supporters: 0,
-      capacity: draft.capacity,
-      joined: false,
-      color: club?.color ?? draft.color,
-      bgColor: club?.bgColor ?? draft.bgColor,
-      free: draft.free,
-      price: draft.price,
-      isNew: true,
-      tags: draft.tags,
-      afterBar: draft.afterBar,
-      afterAddress: draft.afterAddress,
-      soundAllowed: draft.soundAllowed,
-      soundForbidden: draft.soundForbidden,
-      collectifIds: draft.collectifIds,
       createdBy: userId.isEmpty ? 'local' : userId,
     );
+    final ev = await _repo.createEvent(prepared);
     events.add(ev);
     alerts.insert(
       0,
@@ -244,7 +257,8 @@ class AppState extends ChangeNotifier {
         eventId: ev.id,
       ),
     );
-    await _persist();
+    await _saveAlerts();
+    notifyListeners();
     return ev;
   }
 
@@ -263,9 +277,8 @@ class AppState extends ChangeNotifier {
 
   Future<void> toggleFollowClub(String clubId) async {
     final club = clubById(clubId);
-    if (followedClubIds.contains(clubId)) {
-      followedClubIds.remove(clubId);
-    } else {
+    final follow = !followedClubIds.contains(clubId);
+    if (follow) {
       followedClubIds.add(clubId);
       if (club != null) {
         final next = eventsForClub(clubId).where((e) => !e.isPast).toList();
@@ -282,9 +295,12 @@ class AppState extends ChangeNotifier {
             eventId: next.isEmpty ? null : next.first.id,
           ),
         );
+        await _saveAlerts();
       }
+    } else {
+      followedClubIds.remove(clubId);
     }
-    await _persist();
+    await _commit(() => _repo.setClubFollowed(clubId, follow));
   }
 
   // ── Collectifs ───────────────────────────────────────────────
@@ -308,17 +324,15 @@ class AppState extends ChangeNotifier {
   Future<void> toggleJoinCollectif(String collectifId) async {
     final col = collectifById(collectifId);
     if (col == null) return;
-    if (joinedCollectifIds.contains(collectifId)) {
+    final join = !joinedCollectifIds.contains(collectifId);
+    if (join) {
+      joinedCollectifIds.add(collectifId);
+    } else {
       joinedCollectifIds.remove(collectifId);
       myRoles.remove(collectifId);
-      col.joined = false;
-      col.members = max(0, col.members - 1);
-    } else {
-      joinedCollectifIds.add(collectifId);
-      col.joined = true;
-      col.members += 1;
     }
-    await _persist();
+    _applyMembership();
+    await _commit(() => _repo.setCollectifJoined(collectifId, join));
   }
 
   String? myRoleIn(String collectifId) => myRoles[collectifId];
@@ -335,7 +349,7 @@ class AppState extends ChangeNotifier {
     } else {
       myRoles[collectifId] = roleId;
     }
-    await _persist();
+    await _commit(() => _repo.setRole(collectifId, roleId));
   }
 
   // ── Chat ─────────────────────────────────────────────────────
@@ -347,15 +361,39 @@ class AppState extends ChangeNotifier {
   Future<void> sendMessage(String channel, String text) async {
     final t = text.trim();
     if (t.isEmpty) return;
-    messages.add(ChatMessage(
-      id: _newId('um'),
+    final draft = ChatMessage(
+      id: _newId('tmp'),
       channel: channel,
       authorId: userId,
       authorName: userName,
       text: t,
       sentAt: DateTime.now(),
-    ));
-    await _persist();
+    );
+    messages.add(draft);
+    await _commit(() async {
+      final saved = await _repo.sendMessage(draft);
+      messages.remove(draft);
+      if (!messages.any((m) => m.id == saved.id)) messages.add(saved);
+      notifyListeners();
+    });
+  }
+
+  final Map<String, StreamSubscription<List<ChatMessage>>> _channelSubs = {};
+
+  /// Abonne un salon au temps réel (si la source le supporte).
+  void openChannel(String channel) {
+    if (_channelSubs.containsKey(channel)) return;
+    final stream = _repo.watchChannel(channel);
+    if (stream == null) return;
+    _channelSubs[channel] = stream.listen((list) {
+      messages.removeWhere((m) => m.channel == channel && !m.id.startsWith('tmp'));
+      messages.addAll(list);
+      notifyListeners();
+    }, onError: (_) {});
+  }
+
+  void closeChannel(String channel) {
+    _channelSubs.remove(channel)?.cancel();
   }
 
   // ── Chants ───────────────────────────────────────────────────
@@ -367,13 +405,10 @@ class AppState extends ChangeNotifier {
   bool hasVoted(String chantId) => votedChantIds.contains(chantId);
 
   Future<void> toggleVote(String chantId) async {
-    if (votedChantIds.contains(chantId)) {
-      votedChantIds.remove(chantId);
-    } else {
-      votedChantIds.add(chantId);
-    }
+    final vote = !votedChantIds.contains(chantId);
+    vote ? votedChantIds.add(chantId) : votedChantIds.remove(chantId);
     _applyVotes();
-    await _persist();
+    await _commit(() => _repo.setVote(chantId, vote));
   }
 
   Future<void> proposeChant({
@@ -382,9 +417,8 @@ class AppState extends ChangeNotifier {
     required String lyrics,
     required String rhythm,
   }) async {
-    final id = _newId('uch');
-    chants.add(Chant(
-      id: id,
+    final draft = Chant(
+      id: _newId('tmp'),
       collectifId: collectifId,
       title: title.trim(),
       lyrics: lyrics.trim(),
@@ -393,13 +427,34 @@ class AppState extends ChangeNotifier {
       authorName: userName,
       votes: 0,
       createdAt: DateTime.now(),
-    ));
-    votedChantIds.add(id);
-    _applyVotes();
-    await _persist();
+    );
+    await _commit(() async {
+      final saved = await _repo.proposeChant(draft);
+      chants.add(saved);
+      votedChantIds.add(saved.id);
+      _applyVotes();
+      await _repo.setVote(saved.id, true);
+      notifyListeners();
+    });
   }
 
   // ── Alertes ──────────────────────────────────────────────────
+
+  DateTime? _lastSeenEventAt;
+
+  Future<void> _loadAlerts() async {
+    final data = await _alertsStore.load();
+    alerts = [];
+    for (final a in (data?['alerts'] as List? ?? const [])) {
+      if (a is Map<String, dynamic>) alerts.add(FanAlert.fromJson(a));
+    }
+    _lastSeenEventAt = DateTime.tryParse(data?['lastSeenEventAt'] as String? ?? '');
+  }
+
+  Future<void> _saveAlerts() => _alertsStore.save({
+        'alerts': alerts.map((a) => a.toJson()).toList(),
+        'lastSeenEventAt': DateTime.now().toIso8601String(),
+      });
 
   void _generateReminders() {
     final now = DateTime.now();
@@ -425,15 +480,46 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// Events publiés par d'autres pour les clubs suivis, non encore signalés.
+  void _generateNewEventAlerts() {
+    if (_lastSeenEventAt == null) return;
+    for (final e in events) {
+      if (!followedClubIds.contains(e.clubId) || e.createdBy.isEmpty || e.createdBy == userId) continue;
+      if (e.isPast) continue;
+      final id = 'new-${e.id}';
+      if (alerts.any((a) => a.id == id)) continue;
+      alerts.insert(
+        0,
+        FanAlert(
+          id: id,
+          emoji: e.emoji,
+          title: 'Nouvel event : ${e.club}',
+          body: '${e.match} · ${e.dateFormatted} à ${e.time}',
+          date: DateTime.now(),
+          eventId: e.id,
+        ),
+      );
+    }
+  }
+
   Future<void> markAllAlertsRead() async {
     for (final a in alerts) {
       a.read = true;
     }
-    await _persist();
+    await _saveAlerts();
+    notifyListeners();
   }
 
   String _newId(String prefix) =>
       '$prefix-${DateTime.now().millisecondsSinceEpoch}-${_rng.nextInt(99999)}';
+
+  @override
+  void dispose() {
+    for (final s in _channelSubs.values) {
+      s.cancel();
+    }
+    super.dispose();
+  }
 }
 
 /// Donne accès à `AppState` depuis n'importe quel widget.

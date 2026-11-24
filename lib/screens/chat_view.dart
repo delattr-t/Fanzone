@@ -33,8 +33,26 @@ class _ChatViewState extends State<ChatView> {
   final _ctrl = TextEditingController();
   final _scroll = ScrollController();
 
+  AppState? _state;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_state == null) {
+      _state = AppScope.read(context);
+      if (!widget.locked) _state!.openChannel(widget.channel);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatView old) {
+    super.didUpdateWidget(old);
+    if (old.locked && !widget.locked) _state?.openChannel(widget.channel);
+  }
+
   @override
   void dispose() {
+    _state?.closeChannel(widget.channel);
     _ctrl.dispose();
     _scroll.dispose();
     super.dispose();

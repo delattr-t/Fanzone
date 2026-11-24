@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/sticker.dart';
 
 /// Écran d'entrée : un prénom suffit pour démarrer (profil local).
 /// Quand un backend sera branché, ce même écran accueillera la connexion
@@ -26,7 +27,13 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _start() async {
     if (_loading) return;
     setState(() => _loading = true);
-    await AppScope.read(context).signIn(_nameCtrl.text);
+    final state = AppScope.read(context);
+    await state.signIn(_nameCtrl.text);
+    if (!mounted) return;
+    if (!state.isLoggedIn) {
+      setState(() => _loading = false);
+      showFanToast(context, '⚠️ ${state.lastError ?? 'Connexion impossible'}');
+    }
   }
 
   @override
@@ -178,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 14),
                 const Text(
-                  'Pas de compte, pas de mot de passe : tes données restent sur ton téléphone.',
+                  'Pas de mot de passe : ton prénom suffit pour rejoindre la tribune.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Nunito',

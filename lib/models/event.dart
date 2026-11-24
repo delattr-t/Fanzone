@@ -76,6 +76,41 @@ class FanZoneEvent {
 
   bool get hasAfter => afterBar != null && afterBar!.trim().isNotEmpty;
 
+  FanZoneEvent copyWith({int? id, int? supporters, bool? joined, String? createdBy, Color? color, Color? bgColor}) {
+    return FanZoneEvent(
+      id: id ?? this.id,
+      clubId: clubId,
+      club: club,
+      sport: sport,
+      emoji: emoji,
+      match: match,
+      level: level,
+      date: date,
+      time: time,
+      venue: venue,
+      address: address,
+      venueKind: venueKind,
+      lat: lat,
+      lng: lng,
+      description: description,
+      supporters: supporters ?? this.supporters,
+      capacity: capacity,
+      joined: joined ?? this.joined,
+      color: color ?? this.color,
+      bgColor: bgColor ?? this.bgColor,
+      free: free,
+      price: price,
+      isNew: isNew,
+      tags: tags,
+      afterBar: afterBar,
+      afterAddress: afterAddress,
+      soundAllowed: soundAllowed,
+      soundForbidden: soundForbidden,
+      collectifIds: collectifIds,
+      createdBy: createdBy ?? this.createdBy,
+    );
+  }
+
   DateTime? get dateTime {
     try {
       final d = DateTime.parse(date);

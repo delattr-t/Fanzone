@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config.dart';
+import 'data/local_repository.dart';
 import 'data/local_store.dart';
+import 'data/repository.dart';
+import 'data/supabase_repository.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/collectifs_screen.dart';
 import 'screens/home_screen.dart';
@@ -19,7 +24,14 @@ void main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
-  final state = AppState(LocalStore());
+  FanZoneRepository repo;
+  if (AppConfig.useSupabase) {
+    await Supabase.initialize(url: AppConfig.supabaseUrl, anonKey: AppConfig.supabaseKey);
+    repo = SupabaseRepository();
+  } else {
+    repo = LocalRepository(LocalStore());
+  }
+  final state = AppState(repo);
   await state.load();
   runApp(FanZoneApp(state: state));
 }
@@ -82,6 +94,19 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  String? _shownError;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final err = AppScope.of(context).lastError;
+    if (err != null && err != _shownError) {
+      _shownError = err;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) showFanToast(context, '⚠️ $err');
+      });
+    }
+  }
 
   Future<void> _toggleJoin(int eventId) async {
     final state = AppScope.read(context);

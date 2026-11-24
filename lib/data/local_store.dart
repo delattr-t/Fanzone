@@ -14,7 +14,9 @@ abstract class FanZoneStore {
 }
 
 class LocalStore implements FanZoneStore {
-  static const _key = 'fanzone_state_v1';
+  LocalStore({String key = 'fanzone_state_v1'}) : _key = key;
+
+  final String _key;
 
   @override
   Future<Map<String, dynamic>?> load() async {
