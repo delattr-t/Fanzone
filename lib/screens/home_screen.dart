@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/event_card.dart';
+import 'alerts_screen.dart';
+import 'clubs_screen.dart';
+import 'create_event_screen.dart';
 import 'event_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -29,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {'label': 'Football',   'emoji': '⚽'},
     {'label': 'Basketball', 'emoji': '🏀'},
     {'label': 'Volleyball', 'emoji': '🏐'},
+    {'label': 'Judo',       'emoji': '🥋'},
     {'label': 'Course à pied', 'emoji': '🏃'},
     {'label': 'Cyclisme',   'emoji': '🚴'},
   ];
@@ -44,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return [...widget.events]
       ..sort((a, b) => DateTime.parse(a.date).compareTo(DateTime.parse(b.date)))
       ..retainWhere((e) {
+        if (e.isPast && q.isEmpty) return false;
         final matchesQuery = q.isEmpty ||
             e.match.toLowerCase().contains(q) ||
             e.club.toLowerCase().contains(q) ||
@@ -57,16 +63,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final myEvents = widget.events.where((e) => e.joined).toList();
+    final state = AppScope.of(context);
+    final myEvents = widget.events.where((e) => e.joined && !e.isPast).toList()
+      ..sort((a, b) => DateTime.parse(a.date).compareTo(DateTime.parse(b.date)));
     final filtered = _filtered;
     final isFiltering = _query.isNotEmpty || _sportFilter != 'Tous' || _freeOnly;
+    final followedUpcoming = filtered.where((e) => state.isFollowing(e.clubId) && !e.joined).toList();
 
     return Scaffold(
       backgroundColor: FanZoneColors.background,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateEventScreen())),
+        backgroundColor: FanZoneColors.primary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: FanZoneColors.dark, width: 2.5),
+        ),
+        icon: const Text('📣', style: TextStyle(fontSize: 18)),
+        label: const Text('Créer un event', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900)),
+      ),
       body: CustomScrollView(
         slivers: [
           // ── HERO ──────────────────────────────────────────────
-          SliverToBoxAdapter(child: const _HeroBanner()),
+          SliverToBoxAdapter(
+            child: _HeroBanner(
+              userName: state.userName,
+              unread: state.unreadAlerts,
+              onBell: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen())),
+            ),
+          ),
 
           // ── RECHERCHE ─────────────────────────────────────────
           SliverToBoxAdapter(
@@ -113,9 +139,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // ── CLUBS (masqué si recherche active) ────────────────
           if (!isFiltering) ...[
-            _SectionHeader(title: '🏅 Clubs locaux', linkLabel: 'Voir tout →'),
-            SliverToBoxAdapter(child: const _ClubsStrip()),
+            _SectionHeader(
+              title: '🏅 Clubs locaux',
+              linkLabel: 'Voir tout →',
+              onLink: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
+            ),
+            const SliverToBoxAdapter(child: _ClubsStrip()),
             const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          ],
+
+          // ── EVENTS DES CLUBS SUIVIS ───────────────────────────
+          if (followedUpcoming.isNotEmpty && !isFiltering) ...[
+            _SectionHeader(title: '🔔 Tes clubs jouent', badge: '${followedUpcoming.length}'),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => EventCard(
+                  event: followedUpcoming[i],
+                  onTap: () => _openDetail(context, followedUpcoming[i]),
+                  onJoin: () => widget.onToggleJoin(followedUpcoming[i].id),
+                ),
+                childCount: followedUpcoming.length,
+              ),
+            ),
           ],
 
           // ── ÉVÉNEMENTS ────────────────────────────────────────
@@ -137,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 childCount: filtered.length,
               ),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          const SliverToBoxAdapter(child: SizedBox(height: 90)),
         ],
       ),
     );
@@ -351,7 +396,10 @@ class _EmptyState extends StatelessWidget {
 
 // ── HERO BANNER ──────────────────────────────────────────────────
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner();
+  final String userName;
+  final int unread;
+  final VoidCallback onBell;
+  const _HeroBanner({required this.userName, required this.unread, required this.onBell});
 
   @override
   Widget build(BuildContext context) {
@@ -418,8 +466,8 @@ class _HeroBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
+                    text: TextSpan(
+                      style: const TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -427,15 +475,56 @@ class _HeroBanner extends StatelessWidget {
                         height: 1.1,
                       ),
                       children: [
-                        TextSpan(text: 'Bienvenue dans\nla '),
-                        TextSpan(
+                        TextSpan(text: 'Salut $userName,\nbienvenue dans la '),
+                        const TextSpan(
                           text: 'FanZone',
                           style: TextStyle(color: FanZoneColors.yellow),
                         ),
-                        TextSpan(text: ' !'),
+                        const TextSpan(text: ' !'),
                       ],
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+          // Cloche d'alertes
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            right: 14,
+            child: GestureDetector(
+              onTap: onBell,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: FanZoneColors.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: FanZoneColors.dark, width: 2.5),
+                      boxShadow: const [BoxShadow(color: FanZoneColors.yellow, offset: Offset(2, 2), blurRadius: 0)],
+                    ),
+                    child: const Center(child: Text('🔔', style: TextStyle(fontSize: 20))),
+                  ),
+                  if (unread > 0)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: FanZoneColors.error,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: FanZoneColors.dark, width: 2),
+                        ),
+                        child: Text(
+                          '$unread',
+                          style: const TextStyle(fontFamily: 'Nunito', fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -448,78 +537,80 @@ class _HeroBanner extends StatelessWidget {
 
 // ── CLUBS STRIP ──────────────────────────────────────────────────
 class _ClubsStrip extends StatelessWidget {
-  final _clubs = const [
-    {'emoji': '⚽', 'name': 'Ménil', 'color': 0xFFFF4D4D},
-    {'emoji': '🏀', 'name': 'BC SDenis', 'color': 0xFFFF8C00},
-    {'emoji': '🏐', 'name': 'Vincennes', 'color': 0xFF0096FF},
-    {'emoji': '🥋', 'name': 'Aubervilliers', 'color': 0xFF9B27AF},
-    {'emoji': '🏃', 'name': 'Pantin', 'color': 0xFF00A86B},
-    {'emoji': '🚴', 'name': 'VéloVinc', 'color': 0xFFE65C00},
-  ];
-
   const _ClubsStrip();
 
   @override
   Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final clubs = state.clubs;
     return SizedBox(
       height: 52,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _clubs.length,
+        itemCount: clubs.length,
         itemBuilder: (_, i) {
-          final c = _clubs[i];
-          final color = Color(c['color'] as int);
-          return Container(
-            margin: const EdgeInsets.only(right: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: FanZoneColors.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: FanZoneColors.dark, width: 2.5),
-              boxShadow: [
-                BoxShadow(
-                  color: FanZoneColors.dark.withValues(alpha: 0.15),
-                  offset: const Offset(2, 2),
-                  blurRadius: 0,
-                ),
-              ],
+          final c = clubs[i];
+          final following = state.isFollowing(c.id);
+          return GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id)),
             ),
-            child: Row(
-              children: [
-                Text(c['emoji'] as String, style: const TextStyle(fontSize: 18)),
-                const SizedBox(width: 6),
-                Text(
-                  c['name'] as String,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: FanZoneColors.dark,
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: following ? c.bgColor : FanZoneColors.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: following ? c.color : FanZoneColors.dark, width: 2.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: (following ? c.color : FanZoneColors.dark).withValues(alpha: 0.15),
+                    offset: const Offset(2, 2),
+                    blurRadius: 0,
                   ),
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: color, width: 2),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Text(c.emoji, style: const TextStyle(fontSize: 18)),
+                  const SizedBox(width: 6),
+                  Text(
+                    c.shortName,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      color: following ? c.color : FanZoneColors.dark,
+                    ),
                   ),
-                  child: Center(
-                    child: Text(
-                      '+',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: color,
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => state.toggleFollowClub(c.id),
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: following ? c.color : c.color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: c.color, width: 2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          following ? '✓' : '+',
+                          style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: following ? Colors.white : c.color,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -639,8 +730,9 @@ class _SectionHeader extends StatelessWidget {
   final String title;
   final String? badge;
   final String? linkLabel;
+  final VoidCallback? onLink;
 
-  const _SectionHeader({required this.title, this.badge, this.linkLabel});
+  const _SectionHeader({required this.title, this.badge, this.linkLabel, this.onLink});
 
   @override
   Widget build(BuildContext context) {
@@ -678,13 +770,17 @@ class _SectionHeader extends StatelessWidget {
                 ),
               ),
             if (linkLabel != null)
-              Text(
-                linkLabel!,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: FanZoneColors.primary,
+              GestureDetector(
+                onTap: onLink,
+                behavior: HitTestBehavior.opaque,
+                child: Text(
+                  linkLabel!,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: FanZoneColors.primary,
+                  ),
                 ),
               ),
           ],

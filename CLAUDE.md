@@ -3,7 +3,8 @@
 ## Vue d'ensemble
 
 Application Flutter de découverte et participation à des événements sportifs locaux (région parisienne).
-Objectif : permettre aux fans de trouver facilement des matchs de sport amateur près de chez eux et de rejoindre des collectifs de supporters.
+Objectif : permettre aux fans de trouver facilement des matchs de sport amateur près de chez eux,
+de rejoindre des collectifs de supporters et de s'organiser (chat, chants, rôles, after).
 
 **Repo GitHub :** https://github.com/delattr-t/Fanzone
 **Développeur :** Thibaut (thidelattre@gmail.com)
@@ -14,14 +15,17 @@ Objectif : permettre aux fans de trouver facilement des matchs de sport amateur 
 
 | Couche | Technologie |
 |---|---|
-| Framework | Flutter (Dart) |
+| Framework | Flutter (Dart ≥ 3.3) |
 | Fonts | Google Fonts — Nunito |
-| Carte | flutter_map 7.0 + OpenStreetMap (CartoDB dark) |
+| Carte | flutter_map 7.0 + OpenStreetMap |
 | Géolocalisation | geolocator 13.0 |
-| Auth | Firebase Auth — Google Sign-In + Anonyme |
-| Base de données | Cloud Firestore (NoSQL) |
-| Navigation | Bottom nav custom (go_router installé, pas encore utilisé) |
-| State management | StatefulWidget + callbacks (pas de Riverpod/Bloc pour l'instant) |
+| Persistance | `shared_preferences` (blob JSON local) — **aucun backend requis** |
+| Localisation | `flutter_localizations` (date/time pickers en français) |
+| State management | `AppState` (ChangeNotifier) exposé par `AppScope` (InheritedNotifier) |
+| Navigation | Bottom nav custom + `Navigator.push` |
+
+> Firebase a été **retiré** (v1.1) : l'intégration bloquait sur `flutterfire configure` et
+> empêchait l'app de compiler. Les anciens services sont archivés dans `docs/archive/firebase/`.
 
 ---
 
@@ -29,242 +33,132 @@ Objectif : permettre aux fans de trouver facilement des matchs de sport amateur 
 
 ```
 lib/
-├── main.dart                    # Entry point, FanZoneApp, MainShell, BottomNav
-├── firebase_options.dart        # Généré par flutterfire configure (NON commité)
+├── main.dart                        # FanZoneApp, _AuthGate, MainShell, bottom nav
+├── data/
+│   └── local_store.dart             # FanZoneStore (interface) + LocalStore (shared_preferences)
+├── state/
+│   └── app_state.dart               # AppState : TOUTE la logique métier + AppScope
 ├── models/
-│   └── event.dart               # FanZoneEvent + sampleEvents + fromFirestore()
-├── services/
-│   ├── auth_service.dart        # Google Sign-In, anonyme, signOut, userStream
-│   └── firestore_service.dart   # Streams events/collectifs, toggleJoin, seed, updateName
+│   ├── event.dart                   # FanZoneEvent (+ after, matériel sonore, collectifs) + démo
+│   ├── club.dart                    # Club + sampleClubs
+│   ├── collectif.dart               # Collectif, CollectifRole, roleCatalog + démo
+│   ├── social.dart                  # UserProfile, ChatMessage, Chant, FanAlert + démo
+│   └── sound_gear.dart              # Catalogue matériel sonore + note selon type de lieu
 ├── screens/
-│   ├── home_screen.dart         # Accueil : hero, recherche, filtres, events
-│   ├── map_screen.dart          # Carte OSM + pins events + géoloc
-│   ├── agenda_screen.dart       # Calendrier mensuel + liste events
-│   ├── collectifs_screen.dart   # Collectif model + liste + toggle rejoindre
-│   ├── event_detail_screen.dart # Détail event : description, vibe, CTA
-│   ├── profile_screen.dart      # Profil : avatar, stats, mes events, mes collectifs
-│   └── login_screen.dart        # Écran connexion : Google + anonyme
+│   ├── login_screen.dart            # Prénom → profil local
+│   ├── home_screen.dart             # Accueil : hero + cloche alertes, recherche, filtres, clubs, FAB créer
+│   ├── map_screen.dart              # Carte OSM + pins + géoloc
+│   ├── agenda_screen.dart           # Calendrier mensuel + liste
+│   ├── event_detail_screen.dart     # Fiche event complète + EventChatScreen
+│   ├── create_event_screen.dart     # Formulaire création d'event
+│   ├── clubs_screen.dart            # ClubsScreen (liste, suivre) + ClubDetailScreen
+│   ├── collectifs_screen.dart       # Liste des collectifs
+│   ├── collectif_detail_screen.dart # Onglets Chat / Chants / Rôles
+│   ├── chat_view.dart               # ChatView générique (channel `event:<id>` ou `col:<id>`)
+│   ├── chants_view.dart             # Podium, vote, proposition de chant
+│   ├── roles_view.dart              # Choix d'un rôle (1 par membre, capacité par rôle)
+│   ├── alerts_screen.dart           # Centre d'alertes in-app
+│   └── profile_screen.dart          # Profil, mes events/collectifs/clubs, reset
 ├── widgets/
-│   └── event_card.dart          # Card réutilisable event (utilisée sur Home + Agenda)
-└── theme/
-    └── app_theme.dart           # FanZoneColors + AppTheme (Material3)
+│   ├── event_card.dart              # Card event (Home, Agenda, Club)
+│   └── sticker.dart                 # StickerBlock/Label/Button/Pill/Field, EmptyHint, showFanToast
+└── theme/app_theme.dart             # FanZoneColors + AppTheme
+test/widget_test.dart                # 3 tests unitaires sur AppState (join, rôles, votes)
 ```
 
 ---
 
 ## Design system
 
-- **Couleur primaire :** `#FF8C00` (orange)
-- **Fond :** `#FFFDF9` (blanc chaud)
-- **Surface (cartes) :** `#FFFFFF`
-- **Noir :** `#1A1A1A`
-- **Accent sticker :** `#FFD166` (jaune)
-- **Succès :** `#2E7D32` / fond `#E8F5E9`
-- **Ombres :** `BoxShadow(offset: Offset(3,3), blurRadius: 0)` — style "sticker" flat
-- **Bordures :** `2.5px` solide `#1A1A1A` sur toutes les cartes
-- **Typography :** Nunito, `fontWeight: w900` pour les titres, `w800`/`w700` pour le corps
-- **Emoji :** usage intensif comme icônes et décorations (style volontaire)
+- **Couleur primaire :** `#FF8C00` (orange) · **Fond :** `#FFFDF9` · **Noir :** `#1A1A1A` · **Jaune sticker :** `#FFD166`
+- **Style "sticker"** : bordures `2.5px` noires, ombre décalée `Offset(3,3)` sans flou, coins arrondis, emojis partout
+- **Typo :** Nunito, `w900` titres, `w800`/`w700` corps
+- Chaque club/collectif porte sa couleur (`color` + `bgColor`)
+- Widgets réutilisables dans `lib/widgets/sticker.dart` — **les utiliser** plutôt que de recopier des `BoxDecoration`
 
 ---
 
-## État de l'app
+## État de l'app (v1.1)
 
 ### Navigation — 5 onglets (IndexedStack)
-| Index | Onglet | Écran |
-|---|---|---|
-| 0 | 🏠 Accueil | HomeScreen |
-| 1 | 🗺️ Carte | MapScreen |
-| 2 | 📅 Agenda | AgendaScreen |
-| 3 | 🎊 Collectifs | CollectifsScreen |
-| 4 | 👤 Profil | ProfileScreen |
+🏠 Accueil · 🗺️ Carte · 📅 Agenda · 🎊 Collectifs · 👤 Profil
++ écrans poussés : Clubs, fiche club, fiche event, chat event, création d'event, fiche collectif, alertes.
 
-### State management actuel
-- `_events` et `_collectifs` vivent dans `_MainShellState`
-- Passés en props + callbacks (`onToggleJoin`, `onToggle`) à tous les écrans
-- Avec Firebase : rechargés via streams Firestore en temps réel
-- Mise à jour **optimiste** de l'UI avant écriture réseau
+### Données & état
+- `AppState` est la **seule** classe qui touche aux données. Les écrans lisent via `AppScope.of(context)`
+  (rebuild automatique) ou `AppScope.read(context)` (sans dépendance, pour les callbacks).
+- Les données de démo (`buildSample*()`) sont régénérées à chaque lancement avec des **dates relatives à aujourd'hui**.
+- Ce qui est persisté : profil, events créés, ids rejoints (events/collectifs/clubs), rôles, votes,
+  messages et chants de l'utilisateur, alertes. Clé : `fanzone_state_v1`.
+- Les compteurs (supporters, membres, votes) = base de démo + contribution de l'utilisateur,
+  appliqués de façon idempotente (`_applyMembership`, `_applyVotes`).
 
-### Modèle Firestore
-```
-events/{eventId}
-  └── supporters/{uid}         ← membres ayant rejoint
-
-collectifs/{collectifId}
-  └── members/{uid}            ← membres du collectif
-
-users/{uid}
-  ├── displayName, updatedAt
-  ├── joinedEvents/{eventId}   ← events rejoints par l'user
-  └── joinedCollectifs/{colId} ← collectifs rejoints par l'user
-```
+### Fonctionnalités
+- Events : liste/recherche/filtres (sport, gratuit), carte, agenda, fiche complète
+  (accroche, date/lieu/adresse, jauge + vibe, collectifs présents, matériel sonore autorisé/interdit
+  + note selon le lieu, after-match, chat réservé aux participants), création d'event complète.
+- Clubs : liste, fiche, suivre/ne plus suivre → alertes, section « Tes clubs jouent » sur l'accueil.
+- Collectifs : rejoindre, chat membres, chants (proposer / voter / podium), rôles (1 par membre, capacité).
+- Alertes in-app : nouvel event publié, club suivi, rappel J-1/jour J des events rejoints. Badge sur la cloche.
+- Profil : prénom éditable, stats, mes events / collectifs (avec rôle) / clubs, reset complet.
 
 ---
 
-## Historique des modifications
-
-### Commit 1 — `47a123b` — Initial commit MVP
-**Date :** session initiale
-
-MVP complet avec :
-- 4 onglets : Accueil, Carte, Agenda, Collectifs
-- 5 events et 4 collectifs en données mock (`sampleEvents`, `sampleCollectifs`)
-- Carte interactive OSM avec géolocalisation
-- Calendrier mensuel avec indicateurs d'events
-- Système join/leave d'events
-- Design system Nunito + orange/jaune/dark
-
----
-
-### Commit 2 — `47dc510` — fix: corriger bugs + ajouter recherche et filtres
-**Date :** session 1
-
-**Bugs corrigés :**
-- `event_card.dart` : `vibeLabel` affiché en double (pill + texte sous la barre de progression) — supprimé le pill redondant
-- `main.dart` : `_events = sampleEvents` partageait la référence mutable → remplacé par `List.from(sampleEvents)`
-- Partout : `.withOpacity()` déprécié en Flutter 3.x → remplacé par `.withValues(alpha: x)` (17 occurrences dans 6 fichiers)
-- `home_screen.dart` : tri des events par `a.date.compareTo(b.date)` (string) → `DateTime.parse(a.date).compareTo(DateTime.parse(b.date))`
-
-**Feature : Recherche + filtres sur HomeScreen**
-- Barre de recherche avec bouton ✕ clear, filtre sur `match`, `club`, `venue`, `address`
-- Filter chips animés par sport : Tous / Football ⚽ / Basketball 🏀 / Volleyball 🏐 / Course 🏃 / Cyclisme 🚴
-- Toggle "Gratuit 🎟️" comme filtre supplémentaire
-- Filtrage combiné en temps réel (query + sport + free)
-- Empty state quand aucun résultat
-- Sections "Mes équipes" et "Clubs locaux" masquées automatiquement pendant une recherche active
-
-**Fichiers modifiés :** `main.dart`, `home_screen.dart`, `event_card.dart`, `agenda_screen.dart`, `collectifs_screen.dart`, `event_detail_screen.dart`, `map_screen.dart`
-
----
-
-### Commit 3 — `f10fdc5` — feat: ajouter l'écran Profil utilisateur (5e onglet)
-**Date :** session 1
-
-**Refacto — lever l'état des collectifs :**
-- `CollectifsScreen` gérait son propre état (`sampleCollectifs` local) → maintenant reçoit `collectifs` + `onToggle` en props depuis `MainShell`
-- `MainShell` ajoute `_collectifs = List.from(sampleCollectifs)` et `_toggleCollectif()`
-- `Collectif` model reste dans `collectifs_screen.dart` (accessible via import)
-
-**Nouvel écran `ProfileScreen` (`lib/screens/profile_screen.dart`) :**
-- Header dark : avatar cercle avec initiale du prénom, prénom éditable via `AlertDialog`
-- Barre de stats : events rejoints / collectifs rejoints / events à venir
-- Section "Mes events" : scroll horizontal de `_EventMiniCard` avec bouton "Quitter" direct
-- Section "Mes collectifs" : `Wrap` de chips colorés avec emoji + membre count
-- Empty states si aucun event / collectif rejoint
-- 5e onglet 👤 Profil ajouté dans `_FanZoneBottomNav`
-
-**Fichiers créés :** `lib/screens/profile_screen.dart`
-**Fichiers modifiés :** `main.dart`, `collectifs_screen.dart`
-
----
-
-### Commit 4 — `5d34a7c` — feat: intégrer Firebase Auth + Firestore
-**Date :** session 1
-
-**Dépendances ajoutées (`pubspec.yaml`) :**
-```yaml
-firebase_core: ^3.6.0
-firebase_auth: ^5.3.1
-cloud_firestore: ^5.4.4
-google_sign_in: ^6.2.1
-```
-
-**`lib/services/auth_service.dart` (nouveau) :**
-- `signInWithGoogle()` — Google Sign-In OAuth
-- `signInAnonymously()` — accès sans compte
-- `signOut()` — déconnexion Google + Firebase
-- `userStream` — stream pour l'aiguillage auth
-- `displayName` — prénom depuis le compte Google
-
-**`lib/services/firestore_service.dart` (nouveau) :**
-- `eventsStream(uid)` — stream temps réel des events + jointure joined/supporters
-- `collectifsStream(uid)` — stream temps réel des collectifs
-- `toggleJoinEvent(eventId, join)` — batch Firestore (userEvents + supporters)
-- `toggleJoinCollectif(collectifId, join)` — batch Firestore (userCollectifs + members)
-- `updateDisplayName(name)` — persistance du prénom en Firestore
-- `seedIfEmpty()` — insère les 5 events + 4 collectifs de démo si la base est vide
-
-**`lib/screens/login_screen.dart` (nouveau) :**
-- Écran dark avec hero 🏟️ + titre FanZone
-- 3 feature bullets (📍 🎊 🥁)
-- Bouton "Continuer avec Google" (fond blanc, ombre jaune)
-- Bouton "Continuer sans compte" (transparent)
-- Spinner pendant le chargement
-
-**`lib/models/event.dart` :**
-- Ajout champ `firestoreId` (String, optionnel pour la compat mock)
-- Ajout `FanZoneEvent.fromFirestore(docId, data, {joined, supporters})`
-
-**`lib/screens/collectifs_screen.dart` :**
-- Ajout `Collectif.fromFirestore(docId, data, {joined})`
-
-**`lib/main.dart` :**
-- `Firebase.initializeApp()` dans `main()`
-- `StreamBuilder<User?>` sur `AuthService.userStream` → aiguille vers `LoginScreen` ou `MainShell`
-- `_SplashScreen` pendant l'init Firebase
-- `MainShell` charge events + collectifs via streams Firestore
-- Mise à jour optimiste de l'UI avant écriture réseau
-- `_updateName()` persiste en Firestore
-
-**⚠️ BLOQUANT — action manuelle requise :**
-Le fichier `lib/firebase_options.dart` doit être généré par `flutterfire configure`.
-Il n'est PAS dans le repo (à ajouter dans `.gitignore` car contient des clés).
-
----
-
-## Setup Firebase (à faire une fois)
+## Commandes
 
 ```powershell
-# 1. Firebase CLI
-npm install -g firebase-tools
-firebase login
-
-# 2. FlutterFire CLI
-dart pub global activate flutterfire_cli
-
-# 3. Générer firebase_options.dart
-flutterfire configure --project=fanzone
-
-# 4. Packages
+cd fanzone_flutter\fanzone_flutter
 flutter pub get
-
-# 5. Lancer
-flutter run -d chrome
+flutter run -d chrome        # ou flutter run (Android)
+flutter analyze
+flutter test
+flutter build apk --release  # APK pour les testeurs
 ```
 
-Dans la console Firebase :
-- **Authentication** → activer Google + Anonyme
-- **Firestore** → créer en mode Test, région `eur3 (europe-west)`
+Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flutter create .` si la cible web manque.
 
 ---
 
-## Ce qui reste à faire (backlog)
+## Historique
+
+- `47a123b` MVP initial (4 onglets, données mock)
+- `47dc510` fix bugs + recherche/filtres
+- `f10fdc5` écran Profil
+- `5d34a7c` intégration Firebase (non finalisée, retirée ensuite)
+- `0cc1bfa` CLAUDE.md
+- **v1.1 (nov. 2026)** — refonte sans backend : AppState + persistance locale, suppression Firebase,
+  nouveaux écrans Clubs / création d'event / chat / chants / rôles / alertes / matériel sonore / after,
+  fiche event enrichie, login par prénom, widgets sticker, localisation FR, 3 tests unitaires,
+  données de démo à dates relatives, 6e event (judo) + 5e collectif.
+
+---
+
+## Backlog
 
 ### Court terme
-- [ ] Finaliser la configuration Firebase (firebase_options.dart)
-- [ ] Ajouter `firebase_options.dart` dans `.gitignore`
-- [ ] Tester le flow complet : login → events Firestore → join → profil
+- [ ] Tester sur téléphone Android (USB puis APK) et faire tester à 3-5 personnes
+- [ ] Géocodage des adresses à la création d'event (aujourd'hui : position ≈ celle du club)
+- [ ] Partage d'event (share_plus)
+- [ ] Icône + splash + screenshots stores
 
-### Moyen terme
-- [ ] Push notifications (firebase_messaging) — rappel la veille d'un event rejoint
-- [ ] Animations Hero entre EventCard et EventDetailScreen
-- [ ] Écran de création d'event (pour les organisateurs)
-- [ ] Partage d'event (Share API)
-- [ ] Migrer vers go_router (déjà dans pubspec, pas encore utilisé)
+### Backend (quand la démo locale est validée)
+- Choix à faire : **Supabase** (Postgres + Auth + Realtime, pilotable par Claude via connecteur,
+  2 projets actifs max en gratuit) ou Firebase (nécessite des clics manuels dans la console).
+- Remplacer `LocalStore` par une implémentation distante et rendre les méthodes d'`AppState`
+  réellement asynchrones ; brancher l'auth dans `LoginScreen`. Les écrans ne changent pas.
+- Notifications push (remplace les alertes in-app), modération/signalement (exigé par les stores).
 
-### Long terme
-- [ ] State management Riverpod (remplacer callbacks manuels)
-- [ ] Build iOS + Android + publication App Store / Play Store
-- [ ] Système de rôles : Fan / Organisateur / Admin
-- [ ] Géoloc pour "events près de moi" avec rayon configurable
-- [ ] Internationalisation (i18n) si expansion hors France
+### Plus tard
+- Boutique / merch (prototype React existant), thermomètre d'ambiance, badges, répétitions, défis chants.
 
 ---
 
 ## Conventions de code
 
 - Pas de commentaires sauf si le WHY est non-obvious
-- Widgets privés préfixés `_` (ex: `_EventMiniCard`, `_FilterChip`)
-- `.withValues(alpha: x)` et non `.withOpacity(x)` (déprécié Flutter 3.x)
-- Couleurs via `FanZoneColors.xxx` (jamais de hex inline sauf dans le design system)
-- Listes de données copiées avec `List.from()` pour éviter la mutation des sources
-- Tri des events toujours via `DateTime.parse(e.date)` (jamais comparaison string)
+- Widgets privés préfixés `_`
+- `.withValues(alpha: x)` et non `.withOpacity(x)` ; `Color.toARGB32()` et non `.value`
+- Couleurs via `FanZoneColors.xxx` (jamais de hex inline hors design system et données de démo)
+- Tri des events toujours via `DateTime.parse(e.date)`
+- Toute mutation de données passe par une méthode d'`AppState` qui termine par `_persist()`
+- Un test dans `test/widget_test.dart` pour chaque nouvelle règle métier

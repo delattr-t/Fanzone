@@ -1,0 +1,64 @@
+import 'package:fanzone/data/local_store.dart';
+import 'package:fanzone/state/app_state.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+class _MemoryStore implements FanZoneStore {
+  Map<String, dynamic>? data;
+  @override
+  Future<Map<String, dynamic>?> load() async => data;
+  @override
+  Future<void> save(Map<String, dynamic> d) async => data = d;
+}
+
+void main() {
+  test('rejoindre un event incrémente la jauge et persiste', () async {
+    final store = _MemoryStore();
+    final state = AppState(store);
+    await state.load();
+    await state.signIn('Thibaut');
+
+    final ev = state.events.first;
+    final before = ev.supporters;
+    await state.toggleJoinEvent(ev.id);
+    expect(ev.joined, isTrue);
+    expect(ev.supporters, before + 1);
+
+    // Rechargement depuis le store : l'état est conservé.
+    final state2 = AppState(store);
+    await state2.load();
+    expect(state2.userName, 'Thibaut');
+    expect(state2.eventById(ev.id)!.joined, isTrue);
+    expect(state2.eventById(ev.id)!.supporters, before + 1);
+  });
+
+  test('un seul rôle par collectif, capacité respectée', () async {
+    final state = AppState(_MemoryStore());
+    await state.load();
+    await state.signIn('Léa');
+    final col = state.collectifs.first; // chef déjà pris (1/1)
+    await state.toggleJoinCollectif(col.id);
+    expect(state.roleIsFull(col, 'chef'), isTrue);
+    await state.setRole(col.id, 'tambour');
+    expect(state.myRoleIn(col.id), 'tambour');
+    await state.setRole(col.id, 'ultra');
+    expect(state.myRoleIn(col.id), 'ultra');
+    expect(state.roleTaken(col, 'tambour'), col.roleTakenBase['tambour']);
+  });
+
+  test('vote sur un chant idempotent après rechargement', () async {
+    final store = _MemoryStore();
+    final state = AppState(store);
+    await state.load();
+    await state.signIn('Nico');
+    final chant = state.chants.first;
+    final base = chant.votes;
+    await state.toggleVote(chant.id);
+    expect(chant.votes, base + 1);
+    await state.proposeChant(collectifId: chant.collectifId, title: 'Test', lyrics: 'la la', rhythm: '');
+
+    final state2 = AppState(store);
+    await state2.load();
+    expect(state2.chants.firstWhere((c) => c.id == chant.id).votes, base + 1);
+    expect(state2.chants.firstWhere((c) => c.title == 'Test').votes, 1);
+  });
+}

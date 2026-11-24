@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
 import '../theme/app_theme.dart';
-import '../screens/collectifs_screen.dart';
-import '../screens/event_detail_screen.dart';
+import '../models/collectif.dart';
+import '../state/app_state.dart';
+import 'clubs_screen.dart';
+import 'collectif_detail_screen.dart';
+import 'event_detail_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final String userName;
@@ -25,6 +28,8 @@ class ProfileScreen extends StatelessWidget {
     final joinedEvents = events.where((e) => e.joined).toList()
       ..sort((a, b) => DateTime.parse(a.date).compareTo(DateTime.parse(b.date)));
     final joinedCollectifs = collectifs.where((c) => c.joined).toList();
+    final state = AppScope.of(context);
+    final followedClubs = state.clubs.where((c) => state.isFollowing(c.id)).toList();
     final upcoming = joinedEvents.where((e) {
       try {
         return DateTime.parse(e.date).isAfter(DateTime.now().subtract(const Duration(days: 1)));
@@ -98,12 +103,101 @@ class ProfileScreen extends StatelessWidget {
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: joinedCollectifs.map((c) => _CollectifChip(col: c)).toList(),
+                  children: joinedCollectifs.map((c) => GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => CollectifDetailScreen(collectifId: c.id)),
+                    ),
+                    child: _CollectifChip(col: c, role: AppScope.of(context).myRoleIn(c.id)),
+                  )).toList(),
                 ),
               ),
             ),
 
+          // ── MES CLUBS ─────────────────────────────────────────
+          _SectionHeader(title: '🏅 Clubs suivis', badge: '${followedClubs.length}'),
+          if (followedClubs.isEmpty)
+            SliverToBoxAdapter(child: _EmptyHint(text: 'Suis un club pour être alerté de ses prochains matchs.')),
+          if (followedClubs.isNotEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: followedClubs.map((c) => GestureDetector(
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id)),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: c.bgColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: c.color, width: 2.5),
+                      ),
+                      child: Text('${c.emoji} ${c.name}', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w900, color: c.color)),
+                    ),
+                  )).toList(),
+                ),
+              ),
+            ),
+
+          // ── DÉCONNEXION ───────────────────────────────────────
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
+              child: GestureDetector(
+                onTap: () => _confirmSignOut(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: FanZoneColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: FanZoneColors.border, width: 2),
+                  ),
+                  child: const Center(
+                    child: Text('Changer de profil / tout effacer', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: FanZoneColors.textSecondary)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+
+  void _confirmSignOut(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: FanZoneColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: FanZoneColors.dark, width: 2.5),
+        ),
+        title: const Text('Repartir de zéro ?', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 18)),
+        content: const Text(
+          'Tes events, collectifs, rôles et messages seront effacés de ce téléphone.',
+          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600, fontSize: 13, color: FanZoneColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: FanZoneColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: FanZoneColors.error),
+            onPressed: () {
+              Navigator.pop(ctx);
+              AppScope.read(context).signOut();
+            },
+            child: const Text('Effacer'),
+          ),
         ],
       ),
     );
@@ -488,7 +582,8 @@ class _EventMiniCard extends StatelessWidget {
 // ── COLLECTIF CHIP ───────────────────────────────────────────────
 class _CollectifChip extends StatelessWidget {
   final Collectif col;
-  const _CollectifChip({required this.col});
+  final String? role;
+  const _CollectifChip({required this.col, this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -524,7 +619,7 @@ class _CollectifChip extends StatelessWidget {
                 ),
               ),
               Text(
-                '👥 ${col.members} membres',
+                role == null ? '👥 ${col.members} membres' : '${roleById(role!).emoji} ${roleById(role!).label}',
                 style: const TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 10,

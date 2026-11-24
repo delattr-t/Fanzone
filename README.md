@@ -2,93 +2,62 @@
 
 Sport local • Passion vraie 🎊
 
+Application mobile pour trouver les événements sportifs amateurs autour de soi, rejoindre un collectif
+de supporters et s'organiser pour mettre l'ambiance (chants, rôles, matériel, after).
+
+**v1.1 — fonctionne sans backend** : tout est stocké sur le téléphone. Idéal pour tester l'expérience
+avec de vrais supporters avant de brancher une base de données.
+
 ## 🚀 Démarrage rapide
 
-### 1. Pré-requis (Windows)
-
 ```bash
-# Installe Flutter depuis https://flutter.dev/docs/get-started/install/windows
-# Puis vérifie que tout est OK :
-flutter doctor
-```
-
-### 2. Installer les dépendances
-
-```bash
-cd fanzone
+cd fanzone_flutter
 flutter pub get
+flutter run -d chrome      # navigateur
+flutter run                # téléphone / émulateur Android
 ```
 
-### 3. Lancer dans le navigateur (le plus rapide)
-
-```bash
-flutter run -d chrome
-```
-
-### 4. Lancer sur émulateur Android
-
-Ouvre Android Studio → Device Manager → crée un Pixel 7 API 34
-Puis :
-```bash
-flutter run
-```
-
-### 5. Lancer sur ton téléphone Android
-
-Active le mode développeur sur ton Android (Paramètres → À propos → taper 7x sur "Numéro de build")
-Active le débogage USB → branche le câble
-```bash
-flutter devices   # vérifie que ton téléphone est détecté
-flutter run
-```
-
-### 6. Générer un APK à partager
+Générer un APK à partager aux testeurs :
 
 ```bash
 flutter build apk --release
-# Le fichier est dans build/app/outputs/flutter-apk/app-release.apk
-# Envoie-le par WhatsApp ou email à tes testeurs
+# → build/app/outputs/flutter-apk/app-release.apk
 ```
 
-## 📁 Structure du projet
+Vérifier le code :
+
+```bash
+flutter analyze
+flutter test
+```
+
+## ✨ Fonctionnalités
+
+- 🏠 **Accueil** : recherche, filtres par sport / gratuit, clubs locaux, events des clubs suivis, prochains events
+- 🗺️ **Carte** OpenStreetMap avec géolocalisation · 📅 **Agenda** mensuel
+- 🎟️ **Fiche event** : accroche, lieu + adresse, jauge de mobilisation, collectifs présents,
+  matériel sonore autorisé / interdit, after-match, chat réservé aux participants
+- 📣 **Créer un event** : club, sport, adversaire, niveau, date/heure, lieu, capacité, gratuit/payant, after, matériel
+- 🏅 **Clubs** : suivre un club → alerte à chaque nouvel event
+- 🎊 **Collectifs** : chat des membres, chants (proposer, voter, podium), rôles dans la tribune
+- 🔔 **Alertes** : nouveaux events, rappel la veille
+- 👤 **Profil** : mes events, mes collectifs et rôles, mes clubs
+
+## 📁 Structure
 
 ```
 lib/
-├── main.dart                    # Point d'entrée + navigation
-├── theme/
-│   └── app_theme.dart          # Couleurs, typographie FanZone
-├── models/
-│   └── event.dart              # Modèle Event + données de démo
-├── widgets/
-│   └── event_card.dart         # Carte événement réutilisable
-└── screens/
-    ├── home_screen.dart        # Accueil (hero + clubs + events)
-    ├── event_detail_screen.dart # Fiche détail événement
-    ├── agenda_screen.dart      # Calendrier + liste
-    └── collectifs_screen.dart  # Collectifs de supporters
+├── main.dart            # App, navigation
+├── state/app_state.dart # Toute la logique métier (ChangeNotifier)
+├── data/local_store.dart# Persistance locale (interface prête pour un backend)
+├── models/              # Event, Club, Collectif, Chant, Message, Alerte…
+├── screens/             # Un fichier par écran
+├── widgets/             # EventCard + composants "sticker"
+└── theme/               # Couleurs + thème
 ```
 
-## 🎨 Charte graphique
+Voir `CLAUDE.md` pour l'architecture détaillée, l'historique et le backlog.
 
-- **Fond** : `#FFFDF9` (blanc chaud)
-- **Noir** : `#1A1A1A` (bordures, textes)
-- **Orange** : `#FF8C00` (couleur principale FanZone)
-- **Jaune** : `#FFD166` (stickers, badges)
-- **Typo** : Nunito (Google Fonts)
-- **Style** : Stickers avec box-shadow 3px décalé
+## 🎨 Charte
 
-## 📱 Prochaines étapes
-
-- [ ] Écran Carte (flutter_map + OpenStreetMap)
-- [ ] Écran Clubs
-- [ ] Chat collectif (Firebase Realtime DB)
-- [ ] Notifications push (Firebase Cloud Messaging)
-- [ ] Authentification (Firebase Auth)
-- [ ] Backend complet (Firestore)
-
-## 🔧 Dépendances
-
-| Package | Usage |
-|---------|-------|
-| `google_fonts` | Nunito font |
-| `go_router` | Navigation (prêt pour la v2) |
+Fond `#FFFDF9` · Noir `#1A1A1A` · Orange `#FF8C00` · Jaune `#FFD166` · Nunito · style « stickers »

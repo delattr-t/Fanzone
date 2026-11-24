@@ -1,58 +1,65 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'firebase_options.dart';
-import 'models/event.dart';
-import 'theme/app_theme.dart';
-import 'screens/home_screen.dart';
+import 'data/local_store.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/collectifs_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/login_screen.dart';
-import 'services/auth_service.dart';
-import 'services/firestore_service.dart';
+import 'state/app_state.dart';
+import 'theme/app_theme.dart';
+import 'widgets/sticker.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
-  runApp(const FanZoneApp());
+  final state = AppState(LocalStore());
+  await state.load();
+  runApp(FanZoneApp(state: state));
 }
 
 class FanZoneApp extends StatelessWidget {
-  const FanZoneApp({super.key});
+  final AppState state;
+  const FanZoneApp({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FanZone',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
-      // Aiguillage auth : Login ou Shell
-      home: StreamBuilder<User?>(
-        stream: AuthService.userStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const _SplashScreen();
-          }
-          if (snapshot.data == null) {
-            return const LoginScreen();
-          }
-          return const MainShell();
-        },
+    return AppScope(
+      state: state,
+      child: MaterialApp(
+        title: 'FanZone',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.theme,
+        locale: const Locale('fr', 'FR'),
+        supportedLocales: const [Locale('fr', 'FR'), Locale('en', 'US')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: const _AuthGate(),
       ),
     );
   }
 }
 
-// ── SPLASH ───────────────────────────────────────────────────────
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    if (!state.loaded) return const _SplashScreen();
+    return state.isLoggedIn ? const MainShell() : const LoginScreen();
+  }
+}
+
 class _SplashScreen extends StatelessWidget {
   const _SplashScreen();
 
@@ -60,9 +67,7 @@ class _SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: FanZoneColors.dark,
-      body: Center(
-        child: Text('🏟️', style: TextStyle(fontSize: 64)),
-      ),
+      body: Center(child: Text('🏟️', style: TextStyle(fontSize: 64))),
     );
   }
 }
@@ -77,108 +82,46 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-  String _userName = AuthService.displayName;
-
-  List<FanZoneEvent> _events = [];
-  List<Collectif> _collectifs = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserName();
-    FirestoreService.seedIfEmpty();
-
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-
-    FirestoreService.eventsStream(uid).listen((events) {
-      if (mounted) setState(() => _events = events);
-    });
-
-    FirestoreService.collectifsStream(uid).listen((cols) {
-      if (mounted) setState(() => _collectifs = cols);
-    });
-  }
-
-  Future<void> _loadUserName() async {
-    final name = await FirestoreService.getDisplayName();
-    if (name != null && mounted) setState(() => _userName = name);
-  }
 
   Future<void> _toggleJoin(int eventId) async {
-    final ev = _events.firstWhere((e) => e.id == eventId);
-    final newJoined = !ev.joined;
-
-    // Mise à jour optimiste de l'UI
-    setState(() {
-      ev.joined = newJoined;
-      ev.supporters += newJoined ? 1 : -1;
-    });
-
-    await FirestoreService.toggleJoinEvent(ev.firestoreId, newJoined);
-
+    final state = AppScope.read(context);
+    final ev = state.eventById(eventId);
+    if (ev == null) return;
+    final willJoin = !ev.joined;
+    await state.toggleJoinEvent(eventId);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            newJoined ? '🎉 Tu rejoins l\'event !' : 'Tu as quitté l\'event',
-            style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14),
-          ),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: FanZoneColors.dark,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      showFanToast(context, willJoin ? "🎉 Tu rejoins l'event !" : "Tu as quitté l'event");
     }
   }
 
   Future<void> _toggleCollectif(String collectifId) async {
-    final col = _collectifs.firstWhere((c) => c.id == collectifId);
-    final newJoined = !col.joined;
-
-    setState(() {
-      col.joined = newJoined;
-      col.members += newJoined ? 1 : -1;
-    });
-
-    await FirestoreService.toggleJoinCollectif(collectifId, newJoined);
-
+    final state = AppScope.read(context);
+    final col = state.collectifById(collectifId);
+    if (col == null) return;
+    final willJoin = !col.joined;
+    await state.toggleJoinCollectif(collectifId);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            newJoined ? '🎊 Tu rejoins ${col.name} !' : 'Tu as quitté le collectif',
-            style: GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14),
-          ),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: FanZoneColors.dark,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
-        ),
-      );
+      showFanToast(context, willJoin ? '🎊 Tu rejoins ${col.name} !' : 'Tu as quitté le collectif');
     }
-  }
-
-  Future<void> _updateName(String name) async {
-    setState(() => _userName = name);
-    await FirestoreService.updateDisplayName(name);
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final events = state.events;
+    final collectifs = state.collectifs;
+
     final screens = [
-      HomeScreen(events: _events, onToggleJoin: _toggleJoin),
-      MapScreen(events: _events, onToggleJoin: _toggleJoin),
-      AgendaScreen(events: _events, onToggleJoin: _toggleJoin),
-      CollectifsScreen(collectifs: _collectifs, onToggle: _toggleCollectif),
+      HomeScreen(events: events, onToggleJoin: _toggleJoin),
+      MapScreen(events: events, onToggleJoin: _toggleJoin),
+      AgendaScreen(events: events, onToggleJoin: _toggleJoin),
+      CollectifsScreen(collectifs: collectifs, onToggle: _toggleCollectif),
       ProfileScreen(
-        userName: _userName,
-        events: _events,
-        collectifs: _collectifs,
+        userName: state.userName,
+        events: events,
+        collectifs: collectifs,
         onToggleJoin: _toggleJoin,
-        onNameChanged: _updateName,
+        onNameChanged: (name) => state.updateName(name),
       ),
     ];
 

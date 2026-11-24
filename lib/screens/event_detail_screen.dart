@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../models/event.dart';
+import '../models/sound_gear.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/sticker.dart';
+import 'chat_view.dart';
+import 'clubs_screen.dart';
+import 'collectif_detail_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final FanZoneEvent event;
@@ -17,17 +24,50 @@ class EventDetailScreen extends StatefulWidget {
 }
 
 class _EventDetailScreenState extends State<EventDetailScreen> {
+  void _openChat(BuildContext context, FanZoneEvent ev) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EventChatScreen(eventId: ev.id)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ev = widget.event;
+    final state = AppScope.of(context);
+    // On relit l'event depuis l'état pour refléter les changements (jauge, joined…).
+    final ev = state.eventById(widget.event.id) ?? widget.event;
+    final cols = state.collectifsForEvent(ev);
+    final club = state.clubById(ev.clubId);
+    final msgCount = state.messagesFor('event:${ev.id}').length;
+
     return Scaffold(
       backgroundColor: FanZoneColors.background,
       appBar: AppBar(
-        title: Text(ev.emoji + ' ' + ev.club),
+        title: GestureDetector(
+          onTap: club == null
+              ? null
+              : () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: club.id))),
+          child: Text('${ev.emoji} ${ev.club}'),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          if (club != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Center(
+                child: GestureDetector(
+                  onTap: () => state.toggleFollowClub(club.id),
+                  child: StickerPill(
+                    state.isFollowing(club.id) ? '🔔 Suivi' : '+ Suivre',
+                    color: state.isFollowing(club.id) ? ev.color : FanZoneColors.dark,
+                  ),
+                ),
+              ),
+            ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: Container(height: 4, color: ev.color),
@@ -41,35 +81,27 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             // ── Titre + level ──
             Text(
               ev.match,
-              style: const TextStyle(
-                fontFamily: 'Nunito', fontSize: 26,
-                fontWeight: FontWeight.w900,
-                color: FanZoneColors.dark,
-              ),
+              style: const TextStyle(fontFamily: 'Nunito', fontSize: 26, fontWeight: FontWeight.w900, color: FanZoneColors.dark),
             ),
             const SizedBox(height: 4),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(
-                  ev.level,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito', fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: FanZoneColors.textLight,
-                  ),
-                ),
-                const SizedBox(width: 8),
+                Text(ev.level, style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w600, color: FanZoneColors.textLight)),
                 _PricePill(free: ev.free, price: ev.price),
+                if (ev.isPast) const StickerPill('Terminé', color: FanZoneColors.textLight),
               ],
             ),
             const SizedBox(height: 16),
 
             // ── Pourquoi venir ──
-            _Block(
+            StickerBlock(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _Label('Pourquoi venir ?'),
+                  const StickerLabel('Pourquoi venir ?'),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -79,154 +111,218 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ),
                     child: Text(
                       '"${ev.description}"',
-                      style: const TextStyle(
-                        fontFamily: 'Nunito', fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        fontStyle: FontStyle.italic,
-                        color: FanZoneColors.textSecondary,
-                        height: 1.6,
-                      ),
+                      style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic, color: FanZoneColors.textSecondary, height: 1.6),
                     ),
                   ),
+                  if (ev.tags.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Wrap(spacing: 6, runSpacing: 6, children: ev.tags.map((t) => StickerPill(t, color: ev.color)).toList()),
+                  ],
                 ],
               ),
             ),
             const SizedBox(height: 12),
 
             // ── Date & lieu ──
-            _Block(
+            StickerBlock(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _Label('Date & lieu'),
-                  _InfoRow('📅', '${ev.dateFormatted} · ${ev.time}'),
+                  const StickerLabel('Date & lieu'),
+                  _InfoRow('📅', '${ev.dateFormatted} · ${ev.time}  ·  ${ev.daysUntil}'),
                   const SizedBox(height: 4),
-                  _InfoRow('📍', '${ev.venue}, ${ev.address}'),
+                  _InfoRow('📍', ev.venue),
+                  if (ev.address.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 22),
+                      child: Text(ev.address, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w600, color: FanZoneColors.textLight)),
+                    ),
+                  ],
                 ],
               ),
             ),
             const SizedBox(height: 12),
 
             // ── Mobilisation ──
-            _Block(
+            StickerBlock(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: ev.vibeBgColor,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: ev.vibeColor, width: 2),
-                              ),
-                              child: Text(
-                                ev.vibeLabel,
-                                style: TextStyle(
-                                  fontFamily: 'Nunito', fontSize: 12,
-                                  fontWeight: FontWeight.w900,
-                                  color: ev.vibeColor,
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: StickerPill(ev.vibeLabel, color: ev.vibeColor, bg: ev.vibeBgColor, fontSize: 12),
                         ),
                       ),
-                      Text(
-                        '${ev.supporters} / ${ev.capacity} 👥',
-                        style: const TextStyle(
-                          fontFamily: 'Nunito', fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: FanZoneColors.textSecondary,
-                        ),
-                      ),
+                      Text('${ev.supporters} / ${ev.capacity} 👥', style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: FanZoneColors.textSecondary)),
                     ],
                   ),
                   const SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(5),
-                    child: LinearProgressIndicator(
-                      value: ev.fillPct,
-                      backgroundColor: FanZoneColors.cream,
-                      color: ev.color,
-                      minHeight: 10,
-                    ),
+                    child: LinearProgressIndicator(value: ev.fillPct, backgroundColor: FanZoneColors.cream, color: ev.color, minHeight: 10),
                   ),
                   const SizedBox(height: 5),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Jauge à ${(ev.fillPct * 100).round()}%',
-                        style: TextStyle(
-                          fontFamily: 'Nunito', fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: ev.color,
-                        ),
-                      ),
-                      Text(
-                        'Objectif : ${ev.capacity}',
-                        style: const TextStyle(
-                          fontFamily: 'Nunito', fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: FanZoneColors.textLight,
-                        ),
-                      ),
+                      Text('Jauge à ${(ev.fillPct * 100).round()}%', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w800, color: ev.color)),
+                      Text('Objectif : ${ev.capacity}', style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: FanZoneColors.textLight)),
                     ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+
+            // ── Collectifs présents ──
+            StickerBlock(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  StickerLabel('🎊 Collectifs présents (${cols.length})'),
+                  if (cols.isEmpty)
+                    const Text('Aucun collectif annoncé pour l\'instant. Sois le premier à mobiliser ta bande !',
+                        style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
+                  ...cols.map((c) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: GestureDetector(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CollectifDetailScreen(collectifId: c.id))),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: c.joined ? c.bgColor : FanZoneColors.cream,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: c.joined ? c.color : FanZoneColors.border, width: 2),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(c.emoji, style: const TextStyle(fontSize: 22)),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(c.name, style: TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w900, color: c.joined ? c.color : FanZoneColors.dark)),
+                                      Text('👥 ${c.members} membres · ${state.chantsFor(c.id).length} chants', style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: FanZoneColors.textLight)),
+                                    ],
+                                  ),
+                                ),
+                                Text(c.joined ? '✓' : '→', style: TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w900, color: c.joined ? c.color : FanZoneColors.textLight)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ── Matériel sonore ──
+            StickerBlock(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const StickerLabel('🥁 Matériel sonore'),
+                  if (ev.soundAllowed.isEmpty && ev.soundForbidden.isEmpty)
+                    const Text('Non précisé par l\'organisateur — demandez au club avant de ramener la grosse caisse.',
+                        style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
+                  if (ev.soundAllowed.isNotEmpty) ...[
+                    const Text('Autorisé', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: FanZoneColors.success)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6, runSpacing: 6,
+                      children: ev.soundAllowed.map((id) {
+                        final g = gearById(id);
+                        return StickerPill('${g.emoji} ${g.label}', color: FanZoneColors.success, bg: FanZoneColors.successBg);
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  if (ev.soundForbidden.isNotEmpty) ...[
+                    const Text('Interdit', style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: FanZoneColors.error)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6, runSpacing: 6,
+                      children: ev.soundForbidden.map((id) {
+                        final g = gearById(id);
+                        return StickerPill('${g.emoji} ${g.label}', color: FanZoneColors.error, bg: FanZoneColors.errorBg);
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: FanZoneColors.cream, borderRadius: BorderRadius.circular(10)),
+                    child: Text('💡 ${soundNoteForVenueKind(ev.venueKind)}',
+                        style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary, height: 1.4)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ── After ──
+            if (ev.hasAfter) ...[
+              StickerBlock(
+                color: FanZoneColors.warningBg,
+                borderColor: FanZoneColors.yellow,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const StickerLabel('🍻 After-match'),
+                    Text(ev.afterBar!, style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w900, color: FanZoneColors.dark)),
+                    if ((ev.afterAddress ?? '').isNotEmpty)
+                      Text(ev.afterAddress!, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
+                    const SizedBox(height: 4),
+                    const Text('On prolonge la soirée après le coup de sifflet final — tout le monde est le bienvenu.',
+                        style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textLight)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // ── Chat de l'event ──
+            GestureDetector(
+              onTap: () => _openChat(context, ev),
+              child: StickerBlock(
+                child: Row(
+                  children: [
+                    const Text('💬', style: TextStyle(fontSize: 26)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Chat de l\'event', style: TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w900, color: FanZoneColors.dark)),
+                          Text(
+                            ev.joined
+                                ? '$msgCount message${msgCount > 1 ? 's' : ''} · organisez-vous avec les autres supporters'
+                                : 'Réservé à ceux qui viennent · $msgCount message${msgCount > 1 ? 's' : ''}',
+                            style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: FanZoneColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(ev.joined ? '→' : '🔒', style: const TextStyle(fontSize: 18)),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
 
             // ── CTA ──
-            SizedBox(
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    widget.onToggleJoin();
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: ev.joined ? FanZoneColors.successBg : FanZoneColors.dark,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: ev.joined ? FanZoneColors.success : FanZoneColors.dark,
-                      width: 2.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (ev.joined ? FanZoneColors.success : FanZoneColors.dark)
-                            .withValues(alpha: 0.25),
-                        offset: const Offset(4, 4),
-                        blurRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      ev.joined
-                          ? '✓ Tu fais partie du collectif 🎉'
-                          : 'Je viens soutenir ce club 👋',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: ev.joined ? FanZoneColors.success : Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            StickerButton(
+              label: ev.joined ? '✓ Je viens ! (quitter)' : 'Je viens soutenir ce club 👋',
+              color: ev.joined ? FanZoneColors.success : FanZoneColors.dark,
+              outlined: ev.joined,
+              fontSize: 16,
+              onTap: ev.isPast ? null : widget.onToggleJoin,
             ),
             const SizedBox(height: 32),
           ],
@@ -236,49 +332,32 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 }
 
-class _Block extends StatelessWidget {
-  final Widget child;
-  const _Block({required this.child});
+/// Chat d'un événement (réservé aux participants).
+class EventChatScreen extends StatelessWidget {
+  final int eventId;
+  const EventChatScreen({super.key, required this.eventId});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: FanZoneColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: FanZoneColors.dark, width: 2.5),
-        boxShadow: [
-          BoxShadow(
-            color: FanZoneColors.dark.withValues(alpha: 0.08),
-            offset: const Offset(3, 3),
-            blurRadius: 0,
-          ),
-        ],
+    final state = AppScope.of(context);
+    final ev = state.eventById(eventId);
+    if (ev == null) return const Scaffold(body: Center(child: Text('Event introuvable')));
+    return Scaffold(
+      backgroundColor: FanZoneColors.background,
+      appBar: AppBar(
+        title: Text('💬 ${ev.match}', maxLines: 1, overflow: TextOverflow.ellipsis),
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(4), child: Container(height: 4, color: ev.color)),
       ),
-      child: child,
-    );
-  }
-}
-
-class _Label extends StatelessWidget {
-  final String text;
-  const _Label(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(
-          fontFamily: 'Nunito',
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 1.5,
-          color: FanZoneColors.textLight,
-        ),
+      body: ChatView(
+        channel: 'event:${ev.id}',
+        accent: ev.color,
+        locked: !ev.joined,
+        lockedHint: 'Le chat est réservé à ceux qui viennent à l\'event.',
+        unlockLabel: 'Je viens !',
+        onUnlock: () async {
+          await state.toggleJoinEvent(ev.id);
+          if (context.mounted) showFanToast(context, "🎉 Tu rejoins l'event !");
+        },
       ),
     );
   }
@@ -296,15 +375,7 @@ class _InfoRow extends StatelessWidget {
         Text(icon, style: const TextStyle(fontSize: 14)),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: FanZoneColors.textSecondary,
-            ),
-          ),
+          child: Text(text, style: const TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
         ),
       ],
     );
@@ -318,25 +389,10 @@ class _PricePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: free ? FanZoneColors.successBg : FanZoneColors.warningBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: free ? FanZoneColors.success : FanZoneColors.warning,
-          width: 2,
-        ),
-      ),
-      child: Text(
-        free ? '🎟️ Entrée gratuite' : '🎟️ ${price?.toStringAsFixed(0)}€ / personne',
-        style: TextStyle(
-          fontFamily: 'Nunito',
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-          color: free ? FanZoneColors.success : FanZoneColors.warning,
-        ),
-      ),
+    return StickerPill(
+      free ? '🎟️ Entrée gratuite' : '🎟️ ${price?.toStringAsFixed(0) ?? '?'}€ / personne',
+      color: free ? FanZoneColors.success : FanZoneColors.warning,
+      bg: free ? FanZoneColors.successBg : FanZoneColors.warningBg,
     );
   }
 }
