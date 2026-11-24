@@ -35,12 +35,10 @@ class StickerBlock extends StatelessWidget {
       ),
       child: stripe == null
           ? Padding(padding: padding, child: child)
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(width: 6, color: stripe),
-                Expanded(child: Padding(padding: padding, child: child)),
-              ],
+          : Container(
+              decoration: BoxDecoration(border: Border(left: BorderSide(color: stripe!, width: 6))),
+              padding: padding,
+              child: child,
             ),
     );
   }

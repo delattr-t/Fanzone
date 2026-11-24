@@ -29,14 +29,10 @@ class EventCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(3),
           border: Border.all(color: FanZoneColors.ink, width: 1.5),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(width: 6, color: e.color),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                child: Column(
+        child: Container(
+          decoration: BoxDecoration(border: Border(left: BorderSide(color: e.color, width: 6))),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
@@ -92,9 +88,6 @@ class EventCard extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
         ),
       ),
     );
