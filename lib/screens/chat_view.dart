@@ -83,7 +83,7 @@ class _ChatViewState extends State<ChatView> {
       children: [
         Expanded(
           child: msgs.isEmpty
-              ? const EmptyHint(emoji: '💬', text: 'Personne n\'a encore écrit. Lance la conversation !')
+              ? const EmptyHint(emoji: '', text: 'Personne n\'a encore écrit. Lance la conversation!')
               : ListView.builder(
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
@@ -107,16 +107,16 @@ class _ChatViewState extends State<ChatView> {
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
             decoration: const BoxDecoration(
               color: FanZoneColors.surface,
-              border: Border(top: BorderSide(color: FanZoneColors.dark, width: 2.5)),
+              border: Border(top: BorderSide(color: FanZoneColors.dark, width: 1.5)),
             ),
             child: Row(
               children: [
-                const Text('🔒', style: TextStyle(fontSize: 20)),
+                const Text('', style: TextStyle(fontSize: 20)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     widget.lockedHint,
-                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: FanZoneColors.textSecondary),
+                    style: fz(fontSize: 12, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary),
                   ),
                 ),
                 if (widget.onUnlock != null) ...[
@@ -127,12 +127,12 @@ class _ChatViewState extends State<ChatView> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: widget.accent,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: widget.accent, width: 2),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: widget.accent, width: 1.5),
                       ),
                       child: Text(
                         widget.unlockLabel,
-                        style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
+                        style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
                       ),
                     ),
                   ),
@@ -145,7 +145,7 @@ class _ChatViewState extends State<ChatView> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             decoration: const BoxDecoration(
               color: FanZoneColors.surface,
-              border: Border(top: BorderSide(color: FanZoneColors.dark, width: 2.5)),
+              border: Border(top: BorderSide(color: FanZoneColors.dark, width: 1.5)),
             ),
             child: SafeArea(
               top: false,
@@ -155,8 +155,8 @@ class _ChatViewState extends State<ChatView> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: FanZoneColors.background,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: FanZoneColors.dark, width: 2),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: FanZoneColors.dark, width: 1.5),
                       ),
                       child: TextField(
                         controller: _ctrl,
@@ -164,12 +164,12 @@ class _ChatViewState extends State<ChatView> {
                         onSubmitted: (_) => _send(),
                         minLines: 1,
                         maxLines: 4,
-                        style: const TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w700, color: FanZoneColors.dark),
-                        decoration: const InputDecoration(
+                        style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.dark),
+                        decoration: InputDecoration(
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                           hintText: 'Écris un message…',
-                          hintStyle: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w600, color: FanZoneColors.textLight),
+                          hintStyle: fz(fontSize: 13, fontWeight: FontWeight.w500, color: FanZoneColors.textLight),
                         ),
                       ),
                     ),
@@ -183,10 +183,9 @@ class _ChatViewState extends State<ChatView> {
                       decoration: BoxDecoration(
                         color: widget.accent,
                         shape: BoxShape.circle,
-                        border: Border.all(color: FanZoneColors.dark, width: 2.5),
-                        boxShadow: const [BoxShadow(color: FanZoneColors.dark, offset: Offset(2, 2), blurRadius: 0)],
+                        border: Border.all(color: FanZoneColors.dark, width: 1.5)
                       ),
-                      child: const Center(child: Text('📨', style: TextStyle(fontSize: 18))),
+                      child: const Center(child: Text('', style: TextStyle(fontSize: 18))),
                     ),
                   ),
                 ],
@@ -225,9 +224,9 @@ class _DayChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         decoration: BoxDecoration(
           color: FanZoneColors.cream,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(3),
         ),
-        child: Text(label, style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w800, color: FanZoneColors.textSecondary)),
+        child: Text(label, style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
       ),
     );
   }
@@ -252,13 +251,12 @@ class _Bubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: mine ? accent : FanZoneColors.surface,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(14),
-            topRight: const Radius.circular(14),
+            topLeft: const Radius.circular(3),
+            topRight: const Radius.circular(3),
             bottomLeft: Radius.circular(mine ? 14 : 4),
             bottomRight: Radius.circular(mine ? 4 : 14),
           ),
-          border: Border.all(color: FanZoneColors.dark, width: 2),
-          boxShadow: const [BoxShadow(color: Color(0x22000000), offset: Offset(2, 2), blurRadius: 0)],
+          border: Border.all(color: FanZoneColors.dark, width: 1.5)
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,27 +264,21 @@ class _Bubble extends StatelessWidget {
             if (!mine)
               Text(
                 msg.authorName,
-                style: TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w900, color: accent),
+                style: fz(fontSize: 11, fontWeight: FontWeight.w700, color: accent),
               ),
             Text(
               msg.text,
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+              style: fz(fontSize: 14,
+                fontWeight: FontWeight.w600,
                 color: mine ? Colors.white : FanZoneColors.dark,
-                height: 1.35,
-              ),
+                height: 1.35),
             ),
             const SizedBox(height: 2),
             Text(
               '$h:$mn',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: mine ? Colors.white70 : FanZoneColors.textLight,
-              ),
+              style: fz(fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: mine ? Colors.white70 : FanZoneColors.textLight),
             ),
           ],
         ),

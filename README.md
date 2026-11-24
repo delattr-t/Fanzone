@@ -58,6 +58,7 @@ lib/
 
 Voir `CLAUDE.md` pour l'architecture détaillée, l'historique et le backlog.
 
-## 🎨 Charte
+## Charte « Affiche de match »
 
-Fond `#FFFDF9` · Noir `#1A1A1A` · Orange `#FF8C00` · Jaune `#FFD166` · Nunito · style « stickers »
+Papier `#FFFFFF`, encre `#000000`, fumigène `#F0471F` (seul accent), gilet fluo `#E4FF2E` (jauge de mobilisation), béton `#E8E8E3`.
+Barlow Condensed pour les titres, Barlow pour le texte. Pas d'ombres, pas d'emojis : des monogrammes, des dates façon tableau d'affichage et des filets noirs.

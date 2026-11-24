@@ -250,7 +250,7 @@ class AppState extends ChangeNotifier {
       0,
       FanAlert(
         id: _newId('al'),
-        emoji: '📣',
+        emoji: '',
         title: 'Event publié : ${ev.match}',
         body: 'Les fans qui suivent ${ev.club} sont alertés. À toi de mettre le feu !',
         date: DateTime.now(),
@@ -286,7 +286,7 @@ class AppState extends ChangeNotifier {
           0,
           FanAlert(
             id: _newId('al'),
-            emoji: club.emoji,
+            emoji: '',
             title: 'Tu suis ${club.name}',
             body: next.isEmpty
                 ? 'Tu seras alerté dès que le club publie un événement.'
@@ -470,9 +470,9 @@ class AppState extends ChangeNotifier {
         0,
         FanAlert(
           id: id,
-          emoji: '⏰',
+          emoji: '',
           title: diff.inHours < 12 ? "C'est aujourd'hui !" : "C'est demain !",
-          body: '${e.emoji} ${e.match} · ${e.time} · ${e.venue}',
+          body: '${e.match}, ${e.time}, ${e.venue}',
           date: now,
           eventId: e.id,
         ),
@@ -492,7 +492,7 @@ class AppState extends ChangeNotifier {
         0,
         FanAlert(
           id: id,
-          emoji: e.emoji,
+          emoji: '',
           title: 'Nouvel event : ${e.club}',
           body: '${e.match} · ${e.dateFormatted} à ${e.time}',
           date: DateTime.now(),

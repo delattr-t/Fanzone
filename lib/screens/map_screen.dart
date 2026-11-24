@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart' hide Path;
 import 'package:geolocator/geolocator.dart';
 import '../models/event.dart';
 import '../theme/app_theme.dart';
+import '../widgets/sticker.dart';
 import 'event_detail_screen.dart';
 
 class MapScreen extends StatefulWidget {
@@ -39,7 +40,7 @@ class _MapScreenState extends State<MapScreen> {
 
       if (permission == LocationPermission.deniedForever ||
           permission == LocationPermission.denied) {
-        _showSnack('📍 Permission refusée — Paris par défaut');
+        _showSnack('Permission refusée, Paris par défaut');
         setState(() => _locating = false);
         return;
       }
@@ -56,10 +57,10 @@ class _MapScreenState extends State<MapScreen> {
       });
 
       _mapController.move(_userPos!, 13);
-      _showSnack('📍 Position trouvée !');
+      _showSnack('Position trouvée!');
     } catch (_) {
       setState(() => _locating = false);
-      _showSnack('📍 Impossible de te localiser');
+      _showSnack('Impossible de te localiser');
     }
   }
 
@@ -67,11 +68,11 @@ class _MapScreenState extends State<MapScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg,
-          style: const TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w800)),
+          style: fz(fontWeight: FontWeight.w600)),
       duration: const Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
       backgroundColor: FanZoneColors.dark,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
       margin: const EdgeInsets.all(16),
     ));
   }
@@ -92,7 +93,7 @@ class _MapScreenState extends State<MapScreen> {
               onTap: (_, __) => setState(() => _selectedEvent = null),
             ),
             children: [
-              // Tuiles OpenStreetMap — thème sombre Carto
+              // Tuiles OpenStreetMap, thème sombre Carto
               TileLayer(
                 urlTemplate:
                     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
@@ -139,23 +140,16 @@ class _MapScreenState extends State<MapScreen> {
                 children: [
                   Text(
                     '${widget.events.length}',
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
+                    style: fzDisplay(fontSize: 23,
                       color: FanZoneColors.primary,
-                      height: 1,
-                    ),
+                      height: 1),
                   ),
-                  const Text(
+                  Text(
                     'events\nnear de toi',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                    style: fz(fontSize: 11,
+                      fontWeight: FontWeight.w600,
                       color: FanZoneColors.textSecondary,
-                      height: 1.2,
-                    ),
+                      height: 1.2),
                   ),
                 ],
               ),
@@ -191,14 +185,11 @@ class _MapScreenState extends State<MapScreen> {
                           const SizedBox(width: 6),
                           Text(
                             _userPos != null ? 'Localisé' : 'Me localiser',
-                            style: TextStyle(
-                              fontFamily: 'Nunito',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
+                            style: fz(fontSize: 13,
+                              fontWeight: FontWeight.w700,
                               color: _userPos != null
                                   ? FanZoneColors.primary
-                                  : FanZoneColors.textPrimary,
-                            ),
+                                  : FanZoneColors.textPrimary),
                           ),
                         ],
                       ),
@@ -263,7 +254,7 @@ class _UserPin extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: FanZoneColors.primary.withValues(alpha:0.2),
-        border: Border.all(color: FanZoneColors.primary, width: 2),
+        border: Border.all(color: FanZoneColors.primary, width: 1.5),
       ),
       child: Center(
         child: Container(
@@ -293,32 +284,22 @@ class _EventPin extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: event.color,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(3),
             border: Border.all(
               color: event.joined ? Colors.white : Colors.white.withValues(alpha:0.3),
               width: event.joined ? 2.5 : 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: event.color.withValues(alpha:0.5),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            )
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(event.emoji, style: const TextStyle(fontSize: 12)),
+              Text(Monogram.initials(event.club), style: fzDisplay(fontSize: 12, color: Colors.white)),
               const SizedBox(width: 4),
               Text(
-                event.club.split(' ').last,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
+                event.club.split('').last,
+                style: fz(fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white),
               ),
               if (event.joined) ...[
                 const SizedBox(width: 4),
@@ -374,15 +355,8 @@ class _MapBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: FanZoneColors.dark, width: 2.5),
-        boxShadow: [
-          BoxShadow(
-            color: FanZoneColors.dark.withValues(alpha:0.15),
-            offset: const Offset(3, 3),
-            blurRadius: 0,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: FanZoneColors.dark, width: 1.5)
       ),
       child: child,
     );
@@ -408,15 +382,8 @@ class _EventPopup extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: FanZoneColors.dark, width: 2.5),
-        boxShadow: [
-          BoxShadow(
-            color: FanZoneColors.dark.withValues(alpha:0.2),
-            offset: const Offset(4, 4),
-            blurRadius: 0,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: FanZoneColors.dark, width: 1.5)
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -426,7 +393,7 @@ class _EventPopup extends StatelessWidget {
             height: 5,
             decoration: BoxDecoration(
               color: event.color,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
             ),
           ),
           Padding(
@@ -437,12 +404,10 @@ class _EventPopup extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '${event.emoji} ${event.club}',
-                      style: const TextStyle(
-                        fontFamily: 'Nunito', fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: FanZoneColors.textLight,
-                      ),
+                      event.club,
+                      style: fz(fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: FanZoneColors.textLight),
                     ),
                     const Spacer(),
                     GestureDetector(
@@ -454,36 +419,29 @@ class _EventPopup extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   event.match,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito', fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: FanZoneColors.dark,
-                  ),
+                  style: fzDisplay(fontSize: 19,
+                    color: FanZoneColors.dark),
                 ),
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    const Text('📅', style: TextStyle(fontSize: 12)),
+                    const Text('', style: TextStyle(fontSize: 12)),
                     const SizedBox(width: 4),
                     Text(
-                      '${event.dateFormatted} · ${event.time}',
-                      style: const TextStyle(
-                        fontFamily: 'Nunito', fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: FanZoneColors.textSecondary,
-                      ),
+                      '${event.dateFormatted}, ${event.time}',
+                      style: fz(fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: FanZoneColors.textSecondary),
                     ),
                     const SizedBox(width: 8),
-                    const Text('📍', style: TextStyle(fontSize: 12)),
+                    const Text('', style: TextStyle(fontSize: 12)),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         event.address,
-                        style: const TextStyle(
-                          fontFamily: 'Nunito', fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: FanZoneColors.textSecondary,
-                        ),
+                        style: fz(fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: FanZoneColors.textSecondary),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -500,17 +458,15 @@ class _EventPopup extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
                             color: FanZoneColors.cream,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: FanZoneColors.border, width: 2),
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(color: FanZoneColors.border, width: 1.5),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
                               'Voir la fiche →',
-                              style: TextStyle(
-                                fontFamily: 'Nunito', fontSize: 13,
-                                fontWeight: FontWeight.w900,
-                                color: FanZoneColors.dark,
-                              ),
+                              style: fz(fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: FanZoneColors.dark),
                             ),
                           ),
                         ),
@@ -527,7 +483,7 @@ class _EventPopup extends StatelessWidget {
                             color: event.joined
                                 ? FanZoneColors.successBg
                                 : FanZoneColors.dark,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(3),
                             border: Border.all(
                               color: event.joined
                                   ? FanZoneColors.success
@@ -537,14 +493,12 @@ class _EventPopup extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              event.joined ? '✓ Je viens !' : 'Je viens 👋',
-                              style: TextStyle(
-                                fontFamily: 'Nunito', fontSize: 13,
-                                fontWeight: FontWeight.w900,
+                              event.joined ? 'Je viens!' : 'Je viens',
+                              style: fz(fontSize: 13,
+                                fontWeight: FontWeight.w700,
                                 color: event.joined
                                     ? FanZoneColors.success
-                                    : Colors.white,
-                              ),
+                                    : Colors.white),
                             ),
                           ),
                         ),
@@ -595,15 +549,8 @@ class _BottomStrip extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: FanZoneColors.dark, width: 2.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: FanZoneColors.dark.withValues(alpha:0.12),
-                      offset: const Offset(3, 3),
-                      blurRadius: 0,
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: FanZoneColors.dark, width: 1.5)
                 ),
                 child: Column(
                   children: [
@@ -612,7 +559,7 @@ class _BottomStrip extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: ev.color,
                         borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(10)),
+                            top: Radius.circular(3)),
                       ),
                     ),
                     Padding(
@@ -621,23 +568,19 @@ class _BottomStrip extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${ev.emoji} ${ev.club}',
-                            style: const TextStyle(
-                              fontFamily: 'Nunito', fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: FanZoneColors.textLight,
-                            ),
+                            ev.club,
+                            style: fz(fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: FanZoneColors.textLight),
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 3),
                           Text(
                             ev.match,
-                            style: const TextStyle(
-                              fontFamily: 'Nunito', fontSize: 12,
-                              fontWeight: FontWeight.w900,
+                            style: fz(fontSize: 12,
+                              fontWeight: FontWeight.w700,
                               color: FanZoneColors.dark,
-                              height: 1.15,
-                            ),
+                              height: 1.15),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -647,28 +590,24 @@ class _BottomStrip extends StatelessWidget {
                             children: [
                               Text(
                                 ev.dateFormatted,
-                                style: const TextStyle(
-                                  fontFamily: 'Nunito', fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: FanZoneColors.textLight,
-                                ),
+                                style: fz(fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: FanZoneColors.textLight),
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: ev.vibeBgColor,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(3),
                                   border: Border.all(
                                       color: ev.vibeColor, width: 1.5),
                                 ),
                                 child: Text(
                                   ev.daysUntil,
-                                  style: TextStyle(
-                                    fontFamily: 'Nunito', fontSize: 9,
-                                    fontWeight: FontWeight.w900,
-                                    color: ev.vibeColor,
-                                  ),
+                                  style: fz(fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: ev.vibeColor),
                                 ),
                               ),
                             ],

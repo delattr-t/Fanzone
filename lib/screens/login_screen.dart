@@ -4,9 +4,8 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/sticker.dart';
 
-/// Écran d'entrée : un prénom suffit pour démarrer (profil local).
-/// Quand un backend sera branché, ce même écran accueillera la connexion
-/// Google / email sans changer le reste de l'app.
+/// Écran d'entrée : un prénom suffit. Mise en page d'affiche : fond encre,
+/// nom en très gros, une seule couleur d'accent.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -32,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (!state.isLoggedIn) {
       setState(() => _loading = false);
-      showFanToast(context, '⚠️ ${state.lastError ?? 'Connexion impossible'}');
+      showFanToast(context, state.lastError ?? 'Connexion impossible. Vérifie le réseau et réessaie.');
     }
   }
 
@@ -40,159 +39,71 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
-      backgroundColor: FanZoneColors.dark,
+      backgroundColor: FanZoneColors.ink,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(28, 24, 28, 24 + bottomInset),
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - 48 - bottomInset,
-            ),
+            constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - 48 - bottomInset),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 24),
-                const Text('🏟️', style: TextStyle(fontSize: 72)),
-                const SizedBox(height: 16),
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: const TextSpan(
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      height: 1.1,
-                    ),
-                    children: [
-                      TextSpan(text: 'Fan'),
-                      TextSpan(text: 'Zone', style: TextStyle(color: FanZoneColors.yellow)),
-                    ],
-                  ),
+                Container(height: 8, width: 72, color: FanZoneColors.flare),
+                const SizedBox(height: 22),
+                Text(
+                  'FanZone',
+                  style: fzDisplay(fontSize: 72, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: -2),
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: FanZoneColors.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: FanZoneColors.primary, width: 1.5),
-                  ),
-                  child: const Text(
-                    '🥁 Viens faire du bruit pour le sport local !',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: FanZoneColors.primary,
-                    ),
-                  ),
+                const SizedBox(height: 6),
+                Text(
+                  'Les matchs amateurs près de chez toi,\net les gens qui viennent les soutenir.',
+                  style: fz(fontSize: 17, color: Colors.white70, height: 1.35),
                 ),
-                const SizedBox(height: 36),
-                ...[
-                  ('📍', 'Trouve les events sportifs près de chez toi'),
-                  ('🎊', 'Rejoins des collectifs de supporters'),
-                  ('🥁', 'Chants, rôles, after : organisez-vous'),
-                ].map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Row(
-                      children: [
-                        Text(item.$1, style: const TextStyle(fontSize: 20)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            item.$2,
-                            style: const TextStyle(
-                              fontFamily: 'Nunito',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 40),
+                Text('Ton prénom', style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.hiVis)),
+                const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: FanZoneColors.yellow, width: 2.5),
-                    boxShadow: const [
-                      BoxShadow(color: FanZoneColors.yellow, offset: Offset(4, 4), blurRadius: 0),
-                    ],
+                    borderRadius: BorderRadius.circular(3),
                   ),
                   child: TextField(
                     controller: _nameCtrl,
                     textCapitalization: TextCapitalization.words,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _start(),
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: FanZoneColors.dark,
-                    ),
-                    decoration: const InputDecoration(
+                    style: fzDisplay(fontSize: 28, height: 1.1),
+                    decoration: InputDecoration(
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                      hintText: 'Ton prénom (ou ton surnom de tribune)',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: FanZoneColors.textLight,
-                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      hintText: 'ou ton surnom de tribune',
+                      hintStyle: fzDisplay(fontSize: 24, color: FanZoneColors.cement, fontWeight: FontWeight.w500, height: 1.1),
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 GestureDetector(
                   onTap: _start,
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: FanZoneColors.primary,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.white, width: 2.5),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.white24, offset: Offset(4, 4), blurRadius: 0),
-                      ],
+                      color: FanZoneColors.flare,
+                      borderRadius: BorderRadius.circular(3),
                     ),
                     child: Center(
                       child: _loading
-                          ? const SizedBox(
-                              width: 22, height: 22,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-                            )
-                          : const Text(
-                              "C'est parti ! 🎊",
-                              style: TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
+                          ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text('Entrer dans la tribune', style: fz(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.white)),
                     ),
                   ),
                 ),
                 const SizedBox(height: 14),
-                const Text(
-                  'Pas de mot de passe : ton prénom suffit pour rejoindre la tribune.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white38,
-                  ),
+                Text(
+                  'Pas de mot de passe, pas d\'e-mail. Ton prénom suffit pour commencer.',
+                  style: fz(fontSize: 13, color: Colors.white54),
                 ),
               ],
             ),

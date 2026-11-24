@@ -7,7 +7,7 @@ import 'chants_view.dart';
 import 'chat_view.dart';
 import 'roles_view.dart';
 
-/// Fiche d'un collectif : chat, chants, rôles.
+/// Fiche d'un collectif: chat, chants, rôles.
 class CollectifDetailScreen extends StatefulWidget {
   final String collectifId;
   final int initialTab;
@@ -39,7 +39,7 @@ class _CollectifDetailScreenState extends State<CollectifDetailScreen> with Sing
     final willJoin = !col.joined;
     await state.toggleJoinCollectif(col.id);
     if (mounted) {
-      showFanToast(context, willJoin ? '🎊 Bienvenue chez ${col.name} !' : 'Tu as quitté le collectif');
+      showFanToast(context, willJoin ? 'Bienvenue chez ${col.name}.' : 'Tu as quitté ${col.name}.');
     }
   }
 
@@ -50,45 +50,52 @@ class _CollectifDetailScreenState extends State<CollectifDetailScreen> with Sing
     if (col == null) {
       return const Scaffold(body: Center(child: Text('Collectif introuvable')));
     }
-    final upcoming = state.upcomingEvents.where((e) => e.clubId == col.clubId || e.collectifIds.contains(col.id)).toList();
+    final upcoming =
+        state.upcomingEvents.where((e) => e.clubId == col.clubId || e.collectifIds.contains(col.id)).toList();
 
     return Scaffold(
-      backgroundColor: FanZoneColors.background,
+      backgroundColor: FanZoneColors.paper,
       appBar: AppBar(
-        title: Text('${col.emoji} ${col.name}'),
+        title: Text(col.name),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(118),
+          preferredSize: const Size.fromHeight(124),
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: Row(
                   children: [
+                    Monogram(name: col.name, color: col.color, size: 44),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(col.club, style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w800, color: FanZoneColors.textLight)),
+                          Text(col.club, style: fz(fontSize: 14, fontWeight: FontWeight.w600)),
                           Text(
-                            '👥 ${col.members} membres${upcoming.isNotEmpty ? ' · 📅 prochain : ${upcoming.first.dateFormatted}' : ''}',
-                            style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w700, color: FanZoneColors.textSecondary),
+                            '${col.members} membres${upcoming.isNotEmpty ? ', prochain match le ${upcoming.first.dateFormatted}' : ''}',
+                            style: fz(fontSize: 13, color: FanZoneColors.cement),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     GestureDetector(
                       onTap: _toggle,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: col.joined ? FanZoneColors.successBg : col.color,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: col.joined ? FanZoneColors.success : col.color, width: 2),
-                          boxShadow: [BoxShadow(color: (col.joined ? FanZoneColors.success : col.color).withValues(alpha: 0.25), offset: const Offset(2, 2), blurRadius: 0)],
+                          color: col.joined ? FanZoneColors.hiVis : FanZoneColors.ink,
+                          borderRadius: BorderRadius.circular(3),
+                          border: Border.all(color: FanZoneColors.ink, width: 1.5),
                         ),
                         child: Text(
-                          col.joined ? '✓ Membre' : 'Rejoindre',
-                          style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w900, color: col.joined ? FanZoneColors.success : Colors.white),
+                          col.joined ? 'Membre' : 'Rejoindre',
+                          style: fz(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: col.joined ? FanZoneColors.ink : Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -96,21 +103,23 @@ class _CollectifDetailScreenState extends State<CollectifDetailScreen> with Sing
                 ),
               ),
               Container(
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: col.color, width: 4)),
+                decoration: const BoxDecoration(
+                  border: Border(top: BorderSide(color: FanZoneColors.ink, width: 1.5)),
                 ),
                 child: TabBar(
                   controller: _tabs,
-                  labelColor: col.color,
-                  unselectedLabelColor: FanZoneColors.textLight,
+                  labelColor: FanZoneColors.ink,
+                  unselectedLabelColor: FanZoneColors.cement,
                   indicatorColor: col.color,
-                  indicatorWeight: 3,
-                  labelStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w900),
-                  unselectedLabelStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800),
+                  indicatorWeight: 4,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelStyle: fzDisplay(fontSize: 20),
+                  unselectedLabelStyle: fzDisplay(fontSize: 20, fontWeight: FontWeight.w600),
                   tabs: const [
-                    Tab(text: '💬 Chat'),
-                    Tab(text: '🎵 Chants'),
-                    Tab(text: '🥁 Rôles'),
+                    Tab(text: 'Chat'),
+                    Tab(text: 'Chants'),
+                    Tab(text: 'Rôles'),
                   ],
                 ),
               ),

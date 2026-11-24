@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+
 import '../models/event.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/event_card.dart';
+import '../widgets/sticker.dart';
 import 'alerts_screen.dart';
 import 'clubs_screen.dart';
 import 'create_event_screen.dart';
@@ -28,15 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _sportFilter = 'Tous';
   bool _freeOnly = false;
 
-  static const _sportFilters = [
-    {'label': 'Tous',       'emoji': '🎯'},
-    {'label': 'Football',   'emoji': '⚽'},
-    {'label': 'Basketball', 'emoji': '🏀'},
-    {'label': 'Volleyball', 'emoji': '🏐'},
-    {'label': 'Judo',       'emoji': '🥋'},
-    {'label': 'Course à pied', 'emoji': '🏃'},
-    {'label': 'Cyclisme',   'emoji': '🚴'},
-  ];
+  static const _sportFilters = ['Tous', 'Football', 'Basketball', 'Volleyball', 'Judo', 'Course à pied', 'Cyclisme'];
 
   @override
   void dispose() {
@@ -61,101 +55,91 @@ class _HomeScreenState extends State<HomeScreen> {
       });
   }
 
+  void _openDetail(FanZoneEvent event) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EventDetailScreen(event: event, onToggleJoin: () => widget.onToggleJoin(event.id)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
-    final myEvents = widget.events.where((e) => e.joined && !e.isPast).toList()
+    final upcoming = widget.events.where((e) => !e.isPast).toList()
       ..sort((a, b) => DateTime.parse(a.date).compareTo(DateTime.parse(b.date)));
+    final mine = upcoming.where((e) => e.joined).toList();
+    final poster = mine.isNotEmpty ? mine.first : (upcoming.isNotEmpty ? upcoming.first : null);
     final filtered = _filtered;
     final isFiltering = _query.isNotEmpty || _sportFilter != 'Tous' || _freeOnly;
     final followedUpcoming = filtered.where((e) => state.isFollowing(e.clubId) && !e.joined).toList();
+    final listed = isFiltering ? filtered : filtered.where((e) => !followedUpcoming.contains(e)).toList();
 
     return Scaffold(
-      backgroundColor: FanZoneColors.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateEventScreen())),
-        backgroundColor: FanZoneColors.primary,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: FanZoneColors.dark, width: 2.5),
-        ),
-        icon: const Text('📣', style: TextStyle(fontSize: 18)),
-        label: const Text('Créer un event', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900)),
+      backgroundColor: FanZoneColors.paper,
+      floatingActionButton: _PublishButton(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateEventScreen())),
       ),
       body: CustomScrollView(
         slivers: [
-          // ── HERO ──────────────────────────────────────────────
           SliverToBoxAdapter(
-            child: _HeroBanner(
+            child: _Masthead(
               userName: state.userName,
               unread: state.unreadAlerts,
               onBell: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AlertsScreen())),
             ),
           ),
 
-          // ── RECHERCHE ─────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _SearchBar(
-              controller: _searchController,
-              onChanged: (v) => setState(() => _query = v),
-            ),
-          ),
-
-          // ── FILTRES SPORT ─────────────────────────────────────
-          SliverToBoxAdapter(
-            child: _FilterChips(
-              sports: _sportFilters,
-              activeSport: _sportFilter,
-              freeOnly: _freeOnly,
-              onSportTap: (s) => setState(() => _sportFilter = s),
-              onFreeToggle: () => setState(() => _freeOnly = !_freeOnly),
-            ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 4)),
-
-          // ── MES ÉQUIPES (masqué si recherche active) ──────────
-          if (myEvents.isNotEmpty && !isFiltering) ...[
-            _SectionHeader(
-              title: '📌 Mes équipes',
-              badge: '${myEvents.length} suivi${myEvents.length > 1 ? 's' : ''}',
-            ),
+          if (poster != null && !isFiltering)
             SliverToBoxAdapter(
-              child: SizedBox(
-                height: 140,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: myEvents.length,
-                  itemBuilder: (_, i) => _FavCard(
-                    event: myEvents[i],
-                    onTap: () => _openDetail(context, myEvents[i]),
-                  ),
+              child: _Poster(
+                event: poster,
+                mine: poster.joined,
+                onTap: () => _openDetail(poster),
+                onJoin: () => widget.onToggleJoin(poster.id),
+              ),
+            ),
+
+          SliverToBoxAdapter(
+            child: _SearchBar(controller: _searchController, onChanged: (v) => setState(() => _query = v)),
+          ),
+          SliverToBoxAdapter(
+            child: _Filters(
+              sports: _sportFilters,
+              active: _sportFilter,
+              freeOnly: _freeOnly,
+              onSport: (s) => setState(() => _sportFilter = s),
+              onFree: () => setState(() => _freeOnly = !_freeOnly),
+            ),
+          ),
+
+          if (!isFiltering) ...[
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 22, 16, 10),
+                child: SectionTitle(
+                  'Les clubs du coin',
+                  trailing: 'Tous les clubs',
+                  onTrailing: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-          ],
-
-          // ── CLUBS (masqué si recherche active) ────────────────
-          if (!isFiltering) ...[
-            _SectionHeader(
-              title: '🏅 Clubs locaux',
-              linkLabel: 'Voir tout →',
-              onLink: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
-            ),
             const SliverToBoxAdapter(child: _ClubsStrip()),
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
           ],
 
-          // ── EVENTS DES CLUBS SUIVIS ───────────────────────────
           if (followedUpcoming.isNotEmpty && !isFiltering) ...[
-            _SectionHeader(title: '🔔 Tes clubs jouent', badge: '${followedUpcoming.length}'),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 22, 16, 12),
+                child: SectionTitle('Tes clubs jouent'),
+              ),
+            ),
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (_, i) => EventCard(
                   event: followedUpcoming[i],
-                  onTap: () => _openDetail(context, followedUpcoming[i]),
+                  onTap: () => _openDetail(followedUpcoming[i]),
                   onJoin: () => widget.onToggleJoin(followedUpcoming[i].id),
                 ),
                 childCount: followedUpcoming.length,
@@ -163,553 +147,161 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
 
-          // ── ÉVÉNEMENTS ────────────────────────────────────────
-          _SectionHeader(
-            title: isFiltering ? '🔍 Résultats' : '🗓️ Prochains events',
-            badge: '${filtered.length} event${filtered.length > 1 ? 's' : ''}',
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+              child: SectionTitle(
+                isFiltering
+                    ? '${filtered.length} résultat${filtered.length > 1 ? 's' : ''}'
+                    : 'À venir près de chez toi',
+              ),
+            ),
           ),
-
-          if (filtered.isEmpty)
-            SliverToBoxAdapter(child: _EmptyState(isFiltering: isFiltering))
+          if (listed.isEmpty)
+            SliverToBoxAdapter(
+              child: EmptyHint(
+                text: isFiltering
+                    ? 'Rien avec ces filtres. Essaie un autre sport, ou publie toi-même le match.'
+                    : 'Aucun match annoncé pour l\'instant. Publie le premier.',
+              ),
+            )
           else
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (_, i) => EventCard(
-                  event: filtered[i],
-                  onTap: () => _openDetail(context, filtered[i]),
-                  onJoin: () => widget.onToggleJoin(filtered[i].id),
+                  event: listed[i],
+                  onTap: () => _openDetail(listed[i]),
+                  onJoin: () => widget.onToggleJoin(listed[i].id),
                 ),
-                childCount: filtered.length,
+                childCount: listed.length,
               ),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: 90)),
-        ],
-      ),
-    );
-  }
-
-  void _openDetail(BuildContext context, FanZoneEvent event) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EventDetailScreen(
-          event: event,
-          onToggleJoin: () => widget.onToggleJoin(event.id),
-        ),
-      ),
-    );
-  }
-}
-
-// ── SEARCH BAR ───────────────────────────────────────────────────
-class _SearchBar extends StatelessWidget {
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-
-  const _SearchBar({required this.controller, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: FanZoneColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: FanZoneColors.dark, width: 2.5),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x261A1A1A),
-              offset: Offset(3, 3),
-              blurRadius: 0,
-            ),
-          ],
-        ),
-        child: TextField(
-          controller: controller,
-          onChanged: onChanged,
-          style: const TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: FanZoneColors.textPrimary,
-          ),
-          decoration: InputDecoration(
-            hintText: 'Rechercher un event, club, lieu…',
-            hintStyle: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: FanZoneColors.textLight,
-            ),
-            prefixIcon: const Padding(
-              padding: EdgeInsets.only(left: 14, right: 8),
-              child: Text('🔍', style: TextStyle(fontSize: 18)),
-            ),
-            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-            suffixIcon: ValueListenableBuilder(
-              valueListenable: controller,
-              builder: (_, value, __) => value.text.isEmpty
-                  ? const SizedBox.shrink()
-                  : GestureDetector(
-                      onTap: () {
-                        controller.clear();
-                        onChanged('');
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.only(right: 14),
-                        child: Text('✕', style: TextStyle(fontSize: 16, color: FanZoneColors.textLight)),
-                      ),
-                    ),
-            ),
-            suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── FILTER CHIPS ─────────────────────────────────────────────────
-class _FilterChips extends StatelessWidget {
-  final List<Map<String, String>> sports;
-  final String activeSport;
-  final bool freeOnly;
-  final ValueChanged<String> onSportTap;
-  final VoidCallback onFreeToggle;
-
-  const _FilterChips({
-    required this.sports,
-    required this.activeSport,
-    required this.freeOnly,
-    required this.onSportTap,
-    required this.onFreeToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-        children: [
-          ...sports.map((s) {
-            final active = s['label'] == activeSport;
-            return _FilterChip(
-              label: '${s['emoji']} ${s['label']}',
-              active: active,
-              onTap: () => onSportTap(s['label']!),
-            );
-          }),
-          _FilterChip(
-            label: '🎟️ Gratuit',
-            active: freeOnly,
-            activeColor: FanZoneColors.success,
-            activeBg: FanZoneColors.successBg,
-            onTap: onFreeToggle,
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 96)),
         ],
       ),
     );
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool active;
-  final Color activeColor;
-  final Color activeBg;
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.active,
-    required this.onTap,
-    this.activeColor = FanZoneColors.primary,
-    this.activeBg = const Color(0xFFFFF5E0),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        decoration: BoxDecoration(
-          color: active ? activeBg : FanZoneColors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: active ? activeColor : FanZoneColors.border,
-            width: active ? 2 : 1.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            color: active ? activeColor : FanZoneColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── EMPTY STATE ──────────────────────────────────────────────────
-class _EmptyState extends StatelessWidget {
-  final bool isFiltering;
-  const _EmptyState({required this.isFiltering});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-      child: Center(
-        child: Column(
-          children: [
-            const Text('🔍', style: TextStyle(fontSize: 48)),
-            const SizedBox(height: 12),
-            Text(
-              isFiltering ? 'Aucun event ne correspond\nà ta recherche.' : 'Aucun event disponible.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: FanZoneColors.textSecondary,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── HERO BANNER ──────────────────────────────────────────────────
-class _HeroBanner extends StatelessWidget {
+// ── En-tête : nom de l'app en lettres d'affiche + cloche ────────
+class _Masthead extends StatelessWidget {
   final String userName;
   final int unread;
   final VoidCallback onBell;
-  const _HeroBanner({required this.userName, required this.unread, required this.onBell});
+  const _Masthead({required this.userName, required this.unread, required this.onBell});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 210,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1A1A),
-      ),
-      child: Stack(
-        children: [
-          // Image de fond
-          Positioned.fill(
-            child: Image.network(
-              'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=80',
-              fit: BoxFit.cover,
-              color: Colors.black.withValues(alpha: 0.6),
-              colorBlendMode: BlendMode.darken,
-              errorBuilder: (_, __, ___) => Container(
-                color: const Color(0xFF1A1A1A),
-              ),
-            ),
-          ),
-          // Emojis flottants déco
-          const Positioned(top: 16, left: 20,  child: Text('⚽', style: TextStyle(fontSize: 22, color: Colors.white24))),
-          const Positioned(top: 12, right: 40, child: Text('🏀', style: TextStyle(fontSize: 18, color: Colors.white24))),
-          const Positioned(top: 50, left: 80,  child: Text('🥁', style: TextStyle(fontSize: 16, color: Colors.white24))),
-          const Positioned(top: 40, right: 90, child: Text('🎊', style: TextStyle(fontSize: 20, color: Colors.white24))),
-          const Positioned(top: 80, left: 160, child: Text('🏉', style: TextStyle(fontSize: 14, color: Colors.white24))),
-          // Contenu
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, FanZoneColors.background],
-                  stops: const [0.0, 1.0],
-                ),
-              ),
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sticker
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: FanZoneColors.yellow,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: FanZoneColors.dark, width: 2),
-                    ),
-                    child: const Text(
-                      '🥁 Venez faire du bruit !',
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: FanZoneColors.dark,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        color: FanZoneColors.background,
-                        height: 1.1,
-                      ),
-                      children: [
-                        TextSpan(text: 'Salut $userName,\nbienvenue dans la '),
-                        const TextSpan(
-                          text: 'FanZone',
-                          style: TextStyle(color: FanZoneColors.yellow),
-                        ),
-                        const TextSpan(text: ' !'),
-                      ],
-                    ),
-                  ),
+                  Text('FanZone', style: fzDisplay(fontSize: 38, fontWeight: FontWeight.w800, letterSpacing: -1)),
+                  Text('Salut $userName. On va faire du bruit où, ce week-end ?',
+                      style: fz(fontSize: 14, color: FanZoneColors.cement)),
                 ],
               ),
             ),
-          ),
-          // Cloche d'alertes
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            right: 14,
-            child: GestureDetector(
+            GestureDetector(
               onTap: onBell,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: FanZoneColors.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: FanZoneColors.dark, width: 2.5),
-                      boxShadow: const [BoxShadow(color: FanZoneColors.yellow, offset: Offset(2, 2), blurRadius: 0)],
-                    ),
-                    child: const Center(child: Text('🔔', style: TextStyle(fontSize: 20))),
-                  ),
-                  if (unread > 0)
-                    Positioned(
-                      top: -4,
-                      right: -4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: FanZoneColors.error,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: FanZoneColors.dark, width: 2),
-                        ),
-                        child: Text(
-                          '$unread',
-                          style: const TextStyle(fontFamily: 'Nunito', fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                ],
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: unread > 0 ? FanZoneColors.hiVis : FanZoneColors.paper,
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: FanZoneColors.ink, width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.notifications_none, size: 18),
+                    if (unread > 0) ...[
+                      const SizedBox(width: 4),
+                      Text('$unread', style: fzDisplay(fontSize: 18)),
+                    ],
+                  ],
+                ),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── CLUBS STRIP ──────────────────────────────────────────────────
-class _ClubsStrip extends StatelessWidget {
-  const _ClubsStrip();
-
-  @override
-  Widget build(BuildContext context) {
-    final state = AppScope.of(context);
-    final clubs = state.clubs;
-    return SizedBox(
-      height: 52,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: clubs.length,
-        itemBuilder: (_, i) {
-          final c = clubs[i];
-          final following = state.isFollowing(c.id);
-          return GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id)),
-            ),
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: following ? c.bgColor : FanZoneColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: following ? c.color : FanZoneColors.dark, width: 2.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: (following ? c.color : FanZoneColors.dark).withValues(alpha: 0.15),
-                    offset: const Offset(2, 2),
-                    blurRadius: 0,
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Text(c.emoji, style: const TextStyle(fontSize: 18)),
-                  const SizedBox(width: 6),
-                  Text(
-                    c.shortName,
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: following ? c.color : FanZoneColors.dark,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => state.toggleFollowClub(c.id),
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: following ? c.color : c.color.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: c.color, width: 2),
-                      ),
-                      child: Center(
-                        child: Text(
-                          following ? '✓' : '+',
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w900,
-                            color: following ? Colors.white : c.color,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ── FAV CARD ─────────────────────────────────────────────────────
-class _FavCard extends StatelessWidget {
-  final FanZoneEvent event;
-  final VoidCallback onTap;
-
-  const _FavCard({required this.event, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 160,
-        margin: const EdgeInsets.only(right: 10),
-        decoration: BoxDecoration(
-          color: FanZoneColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: FanZoneColors.dark, width: 2.5),
-          boxShadow: [
-            BoxShadow(
-              color: FanZoneColors.dark.withValues(alpha: 0.12),
-              offset: const Offset(3, 3),
-              blurRadius: 0,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── L'affiche : le prochain match (le tien, sinon le plus proche) ──
+class _Poster extends StatelessWidget {
+  final FanZoneEvent event;
+  final bool mine;
+  final VoidCallback onTap;
+  final VoidCallback onJoin;
+  const _Poster({required this.event, required this.mine, required this.onTap, required this.onJoin});
+
+  @override
+  Widget build(BuildContext context) {
+    final e = event;
+    final parts = e.match.split(RegExp(r'\s+vs\s+', caseSensitive: false));
+    final home = parts.first;
+    final away = parts.length > 1 ? parts[1] : null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+        decoration: BoxDecoration(
+          color: FanZoneColors.ink,
+          borderRadius: BorderRadius.circular(3),
+        ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              height: 5,
-              decoration: BoxDecoration(
-                color: event.color,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              ),
-            ),
+            Container(height: 8, color: e.color),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${event.emoji} ${event.club}',
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: FanZoneColors.textLight,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                    mine ? 'Ton prochain match' : 'Le prochain match près de chez toi',
+                    style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.hiVis),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 10),
+                  Text(home, style: fzDisplay(fontSize: 40, color: Colors.white, fontWeight: FontWeight.w800)),
+                  if (away != null)
+                    Text('contre $away', style: fzDisplay(fontSize: 28, color: Colors.white, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 14),
                   Text(
-                    event.match,
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w900,
-                      color: FanZoneColors.textPrimary,
-                      height: 1.15,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    '${_longDate(e.date)}, ${_hour(e.time)}',
+                    style: fz(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
                   ),
-                  const SizedBox(height: 6),
+                  Text(e.venue, style: fz(fontSize: 15, color: Colors.white70)),
+                  const SizedBox(height: 16),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        event.dateFormatted,
-                        style: const TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: FanZoneColors.textLight,
+                      Expanded(
+                        child: Text(
+                          '${e.supporters} supporter${e.supporters > 1 ? 's' : ''} annoncé${e.supporters > 1 ? 's' : ''}',
+                          style: fz(fontSize: 14, color: Colors.white70),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: event.vibeBgColor,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: event.vibeColor, width: 1.5),
-                        ),
-                        child: Text(
-                          event.daysUntil,
-                          style: TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: event.vibeColor,
+                      GestureDetector(
+                        onTap: onJoin,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: mine ? FanZoneColors.hiVis : FanZoneColors.flare,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: Text(
+                            mine ? 'J\'y suis' : 'J\'y vais',
+                            style: fz(fontSize: 15, fontWeight: FontWeight.w600, color: mine ? FanZoneColors.ink : Colors.white),
                           ),
                         ),
                       ),
@@ -723,66 +315,200 @@ class _FavCard extends StatelessWidget {
       ),
     );
   }
+
+  static String _hour(String t) {
+    final p = t.split(':');
+    if (p.length < 2) return t;
+    return p[1] == '00' ? '${p[0]} h' : '${p[0]} h ${p[1]}';
+  }
+
+  static String _longDate(String iso) {
+    try {
+      final d = DateTime.parse(iso);
+      const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+      const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+      return '${days[d.weekday - 1]} ${d.day} ${months[d.month - 1]}';
+    } catch (_) {
+      return iso;
+    }
+  }
 }
 
-// ── SECTION HEADER ───────────────────────────────────────────────
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final String? badge;
-  final String? linkLabel;
-  final VoidCallback? onLink;
-
-  const _SectionHeader({required this.title, this.badge, this.linkLabel, this.onLink});
+// ── Recherche ───────────────────────────────────────────────────
+class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  const _SearchBar({required this.controller, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
-        child: Row(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: FanZoneColors.dark,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: FanZoneColors.ink, width: 1.5),
+          borderRadius: BorderRadius.circular(3),
+        ),
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          style: fz(fontSize: 15),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            prefixIcon: const Icon(Icons.search, size: 20, color: FanZoneColors.ink),
+            hintText: 'Un club, un lieu, une ville',
+            hintStyle: fz(fontSize: 15, color: FanZoneColors.cement),
+            suffixIcon: controller.text.isEmpty
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () {
+                      controller.clear();
+                      onChanged('');
+                    },
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Filters extends StatelessWidget {
+  final List<String> sports;
+  final String active;
+  final bool freeOnly;
+  final ValueChanged<String> onSport;
+  final VoidCallback onFree;
+  const _Filters({required this.sports, required this.active, required this.freeOnly, required this.onSport, required this.onFree});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 46,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+        children: [
+          ...sports.map((s) => _Chip(label: s, active: active == s, onTap: () => onSport(s))),
+          _Chip(label: 'Entrée libre', active: freeOnly, onTap: onFree),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  const _Chip({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: active ? FanZoneColors.ink : FanZoneColors.paper,
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: FanZoneColors.ink, width: 1.5),
+        ),
+        child: Text(
+          label,
+          style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: active ? Colors.white : FanZoneColors.ink),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Clubs : monogrammes ─────────────────────────────────────────
+class _ClubsStrip extends StatelessWidget {
+  const _ClubsStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    return SizedBox(
+      height: 92,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: state.clubs.length,
+        itemBuilder: (_, i) {
+          final c = state.clubs[i];
+          final following = state.isFollowing(c.id);
+          return GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id))),
+            child: Container(
+              width: 84,
+              margin: const EdgeInsets.only(right: 10),
+              child: Column(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Monogram(name: c.name, color: c.color, size: 52),
+                      if (following)
+                        Positioned(
+                          right: -5,
+                          top: -5,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: FanZoneColors.hiVis,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: FanZoneColors.ink, width: 1.5),
+                            ),
+                            child: const Icon(Icons.check, size: 11, color: FanZoneColors.ink),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    c.shortName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: fz(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
             ),
-            const Spacer(),
-            if (badge != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: FanZoneColors.yellow,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: FanZoneColors.dark, width: 2),
-                ),
-                child: Text(
-                  badge!,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: FanZoneColors.dark,
-                  ),
-                ),
-              ),
-            if (linkLabel != null)
-              GestureDetector(
-                onTap: onLink,
-                behavior: HitTestBehavior.opaque,
-                child: Text(
-                  linkLabel!,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: FanZoneColors.primary,
-                  ),
-                ),
-              ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PublishButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _PublishButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: FanZoneColors.flare,
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: FanZoneColors.ink, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add, size: 18, color: Colors.white),
+            const SizedBox(width: 6),
+            Text('Publier un match', style: fz(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
           ],
         ),
       ),

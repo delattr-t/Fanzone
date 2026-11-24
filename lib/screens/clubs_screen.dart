@@ -20,13 +20,13 @@ class ClubsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: FanZoneColors.background,
-      appBar: AppBar(title: const Text('🏅 Clubs locaux')),
+      appBar: AppBar(title: const Text('Clubs locaux')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          const Text(
-            'Suis un club : tu reçois une alerte à chaque nouvel événement, et ses matchs remontent en haut de ton accueil.',
-            style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary, height: 1.5),
+          Text(
+            'Suis un club: tu reçois une alerte à chaque nouvel événement, et ses matchs remontent en haut de ton accueil.',
+            style: fz(fontSize: 13, fontWeight: FontWeight.w500, color: FanZoneColors.textSecondary, height: 1.5),
           ),
           const SizedBox(height: 14),
           if (followed.isNotEmpty) ...[
@@ -63,26 +63,26 @@ class _ClubCard extends StatelessWidget {
               width: 52, height: 52,
               decoration: BoxDecoration(
                 color: club.bgColor,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: club.color, width: 2.5),
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: club.color, width: 1.5),
               ),
-              child: Center(child: Text(club.emoji, style: const TextStyle(fontSize: 26))),
+              child: Center(child: Monogram(name: club.name, color: club.color, size: 44)),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(club.name, style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w900, color: FanZoneColors.dark)),
-                  Text('${club.sport} · ${club.city}', style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: FanZoneColors.textLight)),
+                  Text(club.name, style: fzDisplay(fontSize: 18, color: FanZoneColors.dark)),
+                  Text('${club.sport}, ${club.city}', style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textLight)),
                   const SizedBox(height: 4),
                   Text(
                     next.isEmpty
-                        ? '👥 ${state.followersOf(club)} fans · pas d\'event prévu'
-                        : '👥 ${state.followersOf(club)} fans · 📅 ${next.first.dateFormatted} : ${next.first.match}',
+                        ? '${state.followersOf(club)} fans, pas d\'event prévu'
+                        : '${state.followersOf(club)} fans, ${next.first.dateFormatted}: ${next.first.match}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: FanZoneColors.textSecondary),
+                    style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary),
                   ),
                 ],
               ),
@@ -109,20 +109,19 @@ class _FollowButton extends StatelessWidget {
       onTap: () async {
         await state.toggleFollowClub(club.id);
         if (context.mounted) {
-          showFanToast(context, following ? 'Tu ne suis plus ${club.name}' : '🔔 Tu suis ${club.name} !');
+          showFanToast(context, following ? 'Tu ne suis plus ${club.name}' : 'Tu suis ${club.name}!');
         }
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: 8),
         decoration: BoxDecoration(
           color: following ? club.bgColor : club.color,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: club.color, width: 2),
-          boxShadow: [BoxShadow(color: club.color.withValues(alpha: 0.25), offset: const Offset(2, 2), blurRadius: 0)],
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: club.color, width: 1.5)
         ),
         child: Text(
-          following ? (compact ? '🔔 Suivi' : '🔔 Suivi ✓') : (compact ? '+ Suivre' : '+ Suivre le club'),
-          style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w900, color: following ? club.color : Colors.white),
+          following ? (compact ? 'Suivi' : 'Suivi') : (compact ? '+ Suivre' : '+ Suivre le club'),
+          style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: following ? club.color : Colors.white),
         ),
       ),
     );
@@ -146,7 +145,7 @@ class ClubDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: FanZoneColors.background,
       appBar: AppBar(
-        title: Text('${club.emoji} ${club.name}'),
+        title: Text(club.name),
         bottom: PreferredSize(preferredSize: const Size.fromHeight(4), child: Container(height: 4, color: club.color)),
       ),
       body: ListView(
@@ -158,15 +157,16 @@ class ClubDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${club.sport} · ${club.city}', style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w800, color: FanZoneColors.textSecondary)),
+                Text('${club.sport}, ${club.city}', style: fz(fontSize: 12, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
                 const SizedBox(height: 6),
-                Text(club.description, style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w700, color: FanZoneColors.dark, height: 1.5)),
+                Text(club.description, style: fz(fontSize: 13, fontWeight: FontWeight.w600, color: FanZoneColors.dark, height: 1.5)),
                 const SizedBox(height: 10),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
                   children: [
-                    StickerPill('👥 ${state.followersOf(club)} fans', color: club.color),
-                    const SizedBox(width: 8),
-                    StickerPill('🏟️ ${club.homeVenue}', color: FanZoneColors.dark),
+                    StickerPill('${state.followersOf(club)} fans', color: club.color),
+                    StickerPill('${club.homeVenue}', color: FanZoneColors.dark),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -175,9 +175,9 @@ class ClubDetailScreen extends StatelessWidget {
             ),
           )),
           const SizedBox(height: 18),
-          _Pad(child: StickerLabel('📅 Prochains events (${events.length})')),
+          _Pad(child: StickerLabel('Prochains events (${events.length})')),
           if (events.isEmpty)
-            const EmptyHint(emoji: '😴', text: 'Pas d\'événement annoncé. Suis le club pour être alerté dès qu\'il en publie un.'),
+            const EmptyHint(emoji: '', text: 'Pas d\'événement annoncé. Suis le club pour être alerté dès qu\'il en publie un.'),
           ...events.map((e) => EventCard(
                 event: e,
                 onTap: () => Navigator.push(
@@ -187,9 +187,9 @@ class ClubDetailScreen extends StatelessWidget {
                 onJoin: () => state.toggleJoinEvent(e.id),
               )),
           const SizedBox(height: 10),
-          _Pad(child: StickerLabel('🎊 Collectifs du club (${cols.length})')),
+          _Pad(child: StickerLabel('Collectifs du club (${cols.length})')),
           if (cols.isEmpty)
-            const EmptyHint(emoji: '🫥', text: 'Aucun collectif pour ce club… Lance le premier avec tes potes !'),
+            const EmptyHint(emoji: '', text: 'Aucun collectif pour ce club… Lance le premier avec tes potes!'),
           ...cols.map((c) => _Pad(child: GestureDetector(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CollectifDetailScreen(collectifId: c.id))),
                 child: StickerBlock(
@@ -198,18 +198,18 @@ class ClubDetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
-                      Text(c.emoji, style: const TextStyle(fontSize: 26)),
+                      Monogram(name: c.name, color: c.color, size: 36),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(c.name, style: TextStyle(fontFamily: 'Nunito', fontSize: 14, fontWeight: FontWeight.w900, color: c.joined ? c.color : FanZoneColors.dark)),
-                            Text('👥 ${c.members} membres', style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, fontWeight: FontWeight.w700, color: FanZoneColors.textLight)),
+                            Text(c.name, style: fz(fontSize: 14, fontWeight: FontWeight.w700, color: c.joined ? c.color : FanZoneColors.dark)),
+                            Text('${c.members} membres', style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textLight)),
                           ],
                         ),
                       ),
-                      Text(c.joined ? '✓ Membre' : 'Voir →', style: TextStyle(fontFamily: 'Nunito', fontSize: 12, fontWeight: FontWeight.w900, color: c.joined ? FanZoneColors.success : FanZoneColors.textLight)),
+                      Text(c.joined ? 'Membre' : 'Voir →', style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: c.joined ? FanZoneColors.success : FanZoneColors.textLight)),
                     ],
                   ),
                 ),

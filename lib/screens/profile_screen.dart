@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
 import '../theme/app_theme.dart';
+import '../widgets/sticker.dart';
 import '../models/collectif.dart';
 import '../state/app_state.dart';
 import 'clubs_screen.dart';
@@ -62,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
           // ── MES EVENTS ────────────────────────────────────────
-          _SectionHeader(title: '📌 Mes events', badge: '${joinedEvents.length}'),
+          _SectionHeader(title: 'Mes matchs', badge: '${joinedEvents.length}'),
           if (joinedEvents.isEmpty)
             SliverToBoxAdapter(child: _EmptyHint(text: 'Rejoins un event depuis l\'accueil pour le retrouver ici.')),
           if (joinedEvents.isNotEmpty)
@@ -93,7 +94,7 @@ class ProfileScreen extends StatelessWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
           // ── MES COLLECTIFS ────────────────────────────────────
-          _SectionHeader(title: '🎊 Mes collectifs', badge: '${joinedCollectifs.length}'),
+          _SectionHeader(title: 'Mes collectifs', badge: '${joinedCollectifs.length}'),
           if (joinedCollectifs.isEmpty)
             SliverToBoxAdapter(child: _EmptyHint(text: 'Rejoins un collectif pour y retrouver ta tribu.')),
           if (joinedCollectifs.isNotEmpty)
@@ -115,7 +116,7 @@ class ProfileScreen extends StatelessWidget {
             ),
 
           // ── MES CLUBS ─────────────────────────────────────────
-          _SectionHeader(title: '🏅 Clubs suivis', badge: '${followedClubs.length}'),
+          _SectionHeader(title: 'Clubs suivis', badge: '${followedClubs.length}'),
           if (followedClubs.isEmpty)
             SliverToBoxAdapter(child: _EmptyHint(text: 'Suis un club pour être alerté de ses prochains matchs.')),
           if (followedClubs.isNotEmpty)
@@ -134,10 +135,10 @@ class ProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: c.bgColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: c.color, width: 2.5),
+                        borderRadius: BorderRadius.circular(3),
+                        border: Border.all(color: c.color, width: 1.5),
                       ),
-                      child: Text('${c.emoji} ${c.name}', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w900, color: c.color)),
+                      child: Text(c.name, style: fz(fontSize: 13, fontWeight: FontWeight.w600, color: c.color)),
                     ),
                   )).toList(),
                 ),
@@ -154,11 +155,11 @@ class ProfileScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: FanZoneColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: FanZoneColors.border, width: 2),
+                    borderRadius: BorderRadius.circular(3),
+                    border: Border.all(color: FanZoneColors.border, width: 1.5),
                   ),
-                  child: const Center(
-                    child: Text('Changer de profil / tout effacer', style: TextStyle(fontFamily: 'Nunito', fontSize: 13, fontWeight: FontWeight.w800, color: FanZoneColors.textSecondary)),
+                  child: Center(
+                    child: Text('Changer de profil / tout effacer', style: fz(fontSize: 13, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
                   ),
                 ),
               ),
@@ -177,18 +178,18 @@ class ProfileScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: FanZoneColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: FanZoneColors.dark, width: 2.5),
+          borderRadius: BorderRadius.circular(3),
+          side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
         ),
-        title: const Text('Repartir de zéro ?', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 18)),
-        content: const Text(
+        title: Text('Repartir de zéro?', style: fzDisplay(fontSize: 21)),
+        content: Text(
           'Tes events, collectifs, rôles et messages seront effacés de ce téléphone.',
-          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w600, fontSize: 13, color: FanZoneColors.textSecondary),
+          style: fz(fontWeight: FontWeight.w500, fontSize: 13, color: FanZoneColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: FanZoneColors.textSecondary)),
+            child: Text('Annuler', style: fz(fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: FanZoneColors.error),
@@ -210,41 +211,38 @@ class ProfileScreen extends StatelessWidget {
       builder: (_) => AlertDialog(
         backgroundColor: FanZoneColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: FanZoneColors.dark, width: 2.5),
+          borderRadius: BorderRadius.circular(3),
+          side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
         ),
-        title: const Text(
-          '✏️ Ton prénom',
-          style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w900, fontSize: 18),
+        title: Text(
+          'Ton prénom',
+          style: fzDisplay(fontSize: 21),
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(
-            fontFamily: 'Nunito',
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-          ),
+          style: fz(fontWeight: FontWeight.w600,
+            fontSize: 16),
           decoration: InputDecoration(
             hintText: 'Ton prénom…',
-            hintStyle: const TextStyle(fontFamily: 'Nunito', color: FanZoneColors.textLight),
+            hintStyle: fz(color: FanZoneColors.textLight),
             filled: true,
             fillColor: FanZoneColors.cream,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(3),
               borderSide: const BorderSide(color: FanZoneColors.dark, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: FanZoneColors.primary, width: 2.5),
+              borderRadius: BorderRadius.circular(3),
+              borderSide: const BorderSide(color: FanZoneColors.primary, width: 1.5),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler', style: TextStyle(fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: FanZoneColors.textSecondary)),
+            child: Text('Annuler', style: fz(fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -269,106 +267,40 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = userName.isNotEmpty ? userName[0].toUpperCase() : 'F';
     return Container(
-      decoration: const BoxDecoration(
-        color: FanZoneColors.dark,
-      ),
-      padding: EdgeInsets.fromLTRB(24, MediaQuery.of(context).padding.top + 24, 24, 28),
-      child: Row(
+      color: FanZoneColors.ink,
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 22, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: FanZoneColors.primary,
-              shape: BoxShape.circle,
-              border: Border.all(color: FanZoneColors.yellow, width: 3),
-              boxShadow: const [
-                BoxShadow(color: Color(0xFFFFD166), offset: Offset(3, 3), blurRadius: 0),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
+          Container(height: 6, width: 56, color: FanZoneColors.flare),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  userName,
+                  style: fzDisplay(fontSize: 44, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: -1),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: onEditName,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    'Modifier',
+                    style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.hiVis, decoration: TextDecoration.underline),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          // Infos
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '👋 Salut,',
-                  style: TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: FanZoneColors.textLight,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        userName,
-                        style: const TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: onEditName,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: FanZoneColors.yellow,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: FanZoneColors.yellow, width: 1.5),
-                        ),
-                        child: const Text(
-                          '✏️',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: FanZoneColors.primary.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: FanZoneColors.primary, width: 1.5),
-                  ),
-                  child: const Text(
-                    '🏟️ Fan de sport local',
-                    style: TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: FanZoneColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 4),
+          Text('Supporter de sport local', style: fz(fontSize: 14, color: Colors.white70)),
         ],
       ),
     );
@@ -393,19 +325,16 @@ class _StatsRow extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       decoration: BoxDecoration(
         color: FanZoneColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: FanZoneColors.dark, width: 2.5),
-        boxShadow: const [
-          BoxShadow(color: Color(0x261A1A1A), offset: Offset(3, 3), blurRadius: 0),
-        ],
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: FanZoneColors.dark, width: 1.5)
       ),
       child: Row(
         children: [
-          _StatCell(value: '$eventsCount', label: 'Events\nrejoints', emoji: '🎟️'),
+          _StatCell(value: '$eventsCount', label: 'matchs\nannoncés', emoji: ''),
           _Divider(),
-          _StatCell(value: '$collectifsCount', label: 'Collectifs\nrejoints', emoji: '🎊'),
+          _StatCell(value: '$collectifsCount', label: 'collectifs\nrejoints', emoji: ''),
           _Divider(),
-          _StatCell(value: '$upcomingCount', label: 'À venir\nbientôt', emoji: '📅'),
+          _StatCell(value: '$upcomingCount', label: 'à venir\ncette saison', emoji: ''),
         ],
       ),
     );
@@ -426,28 +355,17 @@ class _StatCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
+            const SizedBox.shrink(),
             const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: FanZoneColors.primary,
-              ),
+              style: fzDisplay(fontSize: 34),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: FanZoneColors.textLight,
-                height: 1.3,
-              ),
+              style: fz(fontSize: 12, color: FanZoneColors.cement, height: 1.25),
             ),
           ],
         ),
@@ -480,15 +398,8 @@ class _EventMiniCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 10),
         decoration: BoxDecoration(
           color: FanZoneColors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: event.color, width: 2.5),
-          boxShadow: [
-            BoxShadow(
-              color: event.color.withValues(alpha: 0.2),
-              offset: const Offset(3, 3),
-              blurRadius: 0,
-            ),
-          ],
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(color: event.color, width: 1.5)
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,7 +408,7 @@ class _EventMiniCard extends StatelessWidget {
               height: 5,
               decoration: BoxDecoration(
                 color: event.color,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
               ),
             ),
             Expanded(
@@ -507,25 +418,19 @@ class _EventMiniCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${event.emoji} ${event.club}',
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: FanZoneColors.textLight,
-                      ),
+                      event.club,
+                      style: fz(fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: FanZoneColors.textLight),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       event.match,
-                      style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
+                      style: fz(fontSize: 12,
+                        fontWeight: FontWeight.w700,
                         color: FanZoneColors.textPrimary,
-                        height: 1.2,
-                      ),
+                        height: 1.2),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -534,13 +439,10 @@ class _EventMiniCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${event.dateFormatted} · ${event.time}',
-                          style: const TextStyle(
-                            fontFamily: 'Nunito',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: FanZoneColors.textLight,
-                          ),
+                          '${event.dateFormatted}, ${event.time}',
+                          style: fz(fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: FanZoneColors.textLight),
                         ),
                       ],
                     ),
@@ -552,18 +454,15 @@ class _EventMiniCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 5),
                         decoration: BoxDecoration(
                           color: FanZoneColors.errorBg,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(3),
                           border: Border.all(color: FanZoneColors.error, width: 1.5),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             'Quitter',
-                            style: TextStyle(
-                              fontFamily: 'Nunito',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: FanZoneColors.error,
-                            ),
+                            style: fz(fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: FanZoneColors.error),
                           ),
                         ),
                       ),
@@ -591,41 +490,28 @@ class _CollectifChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: col.bgColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: col.color, width: 2.5),
-        boxShadow: [
-          BoxShadow(
-            color: col.color.withValues(alpha: 0.2),
-            offset: const Offset(2, 2),
-            blurRadius: 0,
-          ),
-        ],
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: col.color, width: 1.5)
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(col.emoji, style: const TextStyle(fontSize: 16)),
+          Monogram(name: col.name, color: col.color, size: 28),
           const SizedBox(width: 6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 col.name,
-                style: TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w900,
-                  color: col.color,
-                ),
+                style: fz(fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: col.color),
               ),
               Text(
-                role == null ? '👥 ${col.members} membres' : '${roleById(role!).emoji} ${roleById(role!).label}',
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: FanZoneColors.textLight,
-                ),
+                role == null ? '${col.members} membres' : roleById(role!).label,
+                style: fz(fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: FanZoneColors.textLight),
               ),
             ],
           ),
@@ -646,39 +532,8 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
-        child: Row(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: FanZoneColors.dark,
-              ),
-            ),
-            const Spacer(),
-            if (badge != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: FanZoneColors.yellow,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: FanZoneColors.dark, width: 2),
-                ),
-                child: Text(
-                  badge!,
-                  style: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: FanZoneColors.dark,
-                  ),
-                ),
-              ),
-          ],
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+        child: SectionTitle(badge == null ? title : '$title ($badge)'),
       ),
     );
   }
@@ -697,18 +552,15 @@ class _EmptyHint extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: FanZoneColors.cream,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(3),
           border: Border.all(color: FanZoneColors.border, width: 1.5),
         ),
         child: Text(
           text,
-          style: const TextStyle(
-            fontFamily: 'Nunito',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+          style: fz(fontSize: 13,
+            fontWeight: FontWeight.w500,
             color: FanZoneColors.textSecondary,
-            height: 1.5,
-          ),
+            height: 1.5),
         ),
       ),
     );

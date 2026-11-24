@@ -78,8 +78,8 @@ class _SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: FanZoneColors.dark,
-      body: Center(child: Text('🏟️', style: TextStyle(fontSize: 64))),
+      backgroundColor: FanZoneColors.ink,
+      body: Center(child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: FanZoneColors.hiVis, strokeWidth: 2))),
     );
   }
 }
@@ -103,7 +103,7 @@ class _MainShellState extends State<MainShell> {
     if (err != null && err != _shownError) {
       _shownError = err;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) showFanToast(context, '⚠️ $err');
+        if (mounted) showFanToast(context, err);
       });
     }
   }
@@ -115,7 +115,7 @@ class _MainShellState extends State<MainShell> {
     final willJoin = !ev.joined;
     await state.toggleJoinEvent(eventId);
     if (mounted) {
-      showFanToast(context, willJoin ? "🎉 Tu rejoins l'event !" : "Tu as quitté l'event");
+      showFanToast(context, willJoin ? 'Tu es annoncé. On compte sur toi.' : 'Tu n\'es plus annoncé.');
     }
   }
 
@@ -126,7 +126,7 @@ class _MainShellState extends State<MainShell> {
     final willJoin = !col.joined;
     await state.toggleJoinCollectif(collectifId);
     if (mounted) {
-      showFanToast(context, willJoin ? '🎊 Tu rejoins ${col.name} !' : 'Tu as quitté le collectif');
+      showFanToast(context, willJoin ? 'Bienvenue chez ${col.name}.' : 'Tu as quitté ${col.name}.');
     }
   }
 
@@ -160,7 +160,7 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-// ── BOTTOM NAV personnalisée ─────────────────────────────────────
+// ── BOTTOM NAV : libellés en lettres d'affiche, trait fluo sous l'actif ──
 class _FanZoneBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -168,27 +168,27 @@ class _FanZoneBottomNav extends StatelessWidget {
   const _FanZoneBottomNav({required this.currentIndex, required this.onTap});
 
   static const _items = [
-    {'icon': '🏠', 'label': 'Accueil'},
-    {'icon': '🗺️', 'label': 'Carte'},
-    {'icon': '📅', 'label': 'Agenda'},
-    {'icon': '🎊', 'label': 'Collectifs'},
-    {'icon': '👤', 'label': 'Profil'},
+    (Icons.home_outlined, Icons.home, 'Accueil'),
+    (Icons.map_outlined, Icons.map, 'Carte'),
+    (Icons.calendar_today_outlined, Icons.calendar_today, 'Agenda'),
+    (Icons.groups_outlined, Icons.groups, 'Collectifs'),
+    (Icons.person_outline, Icons.person, 'Profil'),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: FanZoneColors.surface,
-        border: Border(top: BorderSide(color: FanZoneColors.dark, width: 3)),
+        color: FanZoneColors.paper,
+        border: Border(top: BorderSide(color: FanZoneColors.ink, width: 2)),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: 60,
           child: Row(
             children: List.generate(_items.length, (i) {
-              final item   = _items[i];
+              final item = _items[i];
               final active = i == currentIndex;
               return Expanded(
                 child: GestureDetector(
@@ -197,27 +197,17 @@ class _FanZoneBottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(item['icon']!, style: TextStyle(fontSize: active ? 22 : 20)),
-                      const SizedBox(height: 2),
+                      Icon(active ? item.$2 : item.$1, size: 22, color: FanZoneColors.ink),
+                      const SizedBox(height: 3),
                       Text(
-                        item['label']!,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: active ? FanZoneColors.primary : FanZoneColors.textLight,
-                          letterSpacing: 0.3,
-                        ),
+                        item.$3,
+                        style: fzDisplay(fontSize: 14, fontWeight: active ? FontWeight.w700 : FontWeight.w500),
                       ),
-                      const SizedBox(height: 2),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: active ? 20 : 0,
-                        height: active ? 3 : 0,
-                        decoration: BoxDecoration(
-                          color: FanZoneColors.primary,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                      const SizedBox(height: 3),
+                      Container(
+                        width: 26,
+                        height: 3,
+                        color: active ? FanZoneColors.hiVis : Colors.transparent,
                       ),
                     ],
                   ),

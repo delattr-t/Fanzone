@@ -16,16 +16,18 @@ de rejoindre des collectifs de supporters et de s'organiser (chat, chants, rôle
 | Couche | Technologie |
 |---|---|
 | Framework | Flutter (Dart ≥ 3.3) |
-| Fonts | Google Fonts — Nunito |
+| Fonts | Google Fonts — Barlow Condensed (titres) + Barlow (corps) |
 | Carte | flutter_map 7.0 + OpenStreetMap |
 | Géolocalisation | geolocator 13.0 |
-| Persistance | `shared_preferences` (blob JSON local) — **aucun backend requis** |
+| Backend | **Supabase** (projet `fanzone`, région eu-west-3 Paris) : Postgres + Auth anonyme + Realtime. `AppConfig.useSupabase = false` pour revenir au mode 100 % local |
+| Persistance locale | `shared_preferences` (mode local + alertes) |
 | Localisation | `flutter_localizations` (date/time pickers en français) |
 | State management | `AppState` (ChangeNotifier) exposé par `AppScope` (InheritedNotifier) |
 | Navigation | Bottom nav custom + `Navigator.push` |
 
 > Firebase a été **retiré** (v1.1) : l'intégration bloquait sur `flutterfire configure` et
 > empêchait l'app de compiler. Les anciens services sont archivés dans `docs/archive/firebase/`.
+> Supabase l'a remplacé (v1.2) : Claude pilote la base via connecteur (migrations, RLS, seed).
 
 ---
 
@@ -34,7 +36,11 @@ de rejoindre des collectifs de supporters et de s'organiser (chat, chants, rôle
 ```
 lib/
 ├── main.dart                        # FanZoneApp, _AuthGate, MainShell, bottom nav
+├── config.dart                      # AppConfig : useSupabase, URL, clé publishable
 ├── data/
+│   ├── repository.dart              # FanZoneRepository (interface) + DataSnapshot
+│   ├── local_repository.dart        # Impl. locale (démo + blob JSON)
+│   ├── supabase_repository.dart     # Impl. Supabase (tables, RLS, realtime messages)
 │   └── local_store.dart             # FanZoneStore (interface) + LocalStore (shared_preferences)
 ├── state/
 │   └── app_state.dart               # AppState : TOUTE la logique métier + AppScope
@@ -63,18 +69,31 @@ lib/
 │   ├── event_card.dart              # Card event (Home, Agenda, Club)
 │   └── sticker.dart                 # StickerBlock/Label/Button/Pill/Field, EmptyHint, showFanToast
 └── theme/app_theme.dart             # FanZoneColors + AppTheme
-test/widget_test.dart                # 3 tests unitaires sur AppState (join, rôles, votes)
+test/widget_test.dart                # 4 tests unitaires sur AppState via LocalRepository
 ```
 
 ---
 
-## Design system
+## Design system — « Affiche de match » (v1.3)
 
-- **Couleur primaire :** `#FF8C00` (orange) · **Fond :** `#FFFDF9` · **Noir :** `#1A1A1A` · **Jaune sticker :** `#FFD166`
-- **Style "sticker"** : bordures `2.5px` noires, ombre décalée `Offset(3,3)` sans flou, coins arrondis, emojis partout
-- **Typo :** Nunito, `w900` titres, `w800`/`w700` corps
-- Chaque club/collectif porte sa couleur (`color` + `bgColor`)
-- Widgets réutilisables dans `lib/widgets/sticker.dart` — **les utiliser** plutôt que de recopier des `BoxDecoration`
+Direction : l'affiche de match collée sur le mur du gymnase. Papier blanc, encre noire, un seul
+accent (le fumigène), un jaune gilet-fluo réservé à la jauge de mobilisation. Pas d'ombres, pas
+d'emojis dans l'interface, pas de dégradés.
+
+- **Couleurs** (`FanZoneColors`) : `paper #FFFFFF` · `ink #000000` · `flare #F0471F` (seul accent,
+  CTA + alertes non lues) · `hiVis #E4FF2E` (jauge, soulignement de l'onglet actif, état « membre ») ·
+  `wall #E8E8E3` / `wallDeep #D6D6D0` (surfaces secondaires) · `cement #6B6B66` (texte secondaire).
+  Les alias historiques (`primary`, `dark`, `background`, `yellow`…) pointent vers ces valeurs.
+- **Typo** : Barlow Condensed pour l'affichage (`fzDisplay()`, w700/w800, lettrage serré) ;
+  Barlow pour le corps (`fz()`, w400–w600). Jamais de `TextStyle` Nunito ni de `GoogleFonts.*` direct.
+- **Formes** : rayon `3`, bordure `1.5px` encre, filet `3px` encre sous les titres de section
+  (`SectionTitle`), bande de couleur du club en haut des cartes (`StickerBlock(stripe:)`).
+- **Composants** (`lib/widgets/sticker.dart`) : `StickerBlock`, `SectionTitle`, `Monogram`
+  (initiales du club/collectif à la place des emojis), `DateBlock` (date façon tableau d'affichage),
+  `Gauge` (jauge de remplissage hi-vis), `StickerButton`, `StickerPill`, `StickerField`, `EmptyHint`.
+- **Ton des textes** : phrases complètes, minuscules, verbes concrets (« J'y vais », « Publier un
+  match », « Entrer dans la tribune »). Pas de « · » entre les métadonnées : des virgules.
+- Chaque club/collectif garde sa couleur (`color`) : elle sert à la bande des cartes et au monogramme.
 
 ---
 
@@ -87,11 +106,24 @@ test/widget_test.dart                # 3 tests unitaires sur AppState (join, rô
 ### Données & état
 - `AppState` est la **seule** classe qui touche aux données. Les écrans lisent via `AppScope.of(context)`
   (rebuild automatique) ou `AppScope.read(context)` (sans dépendance, pour les callbacks).
-- Les données de démo (`buildSample*()`) sont régénérées à chaque lancement avec des **dates relatives à aujourd'hui**.
-- Ce qui est persisté : profil, events créés, ids rejoints (events/collectifs/clubs), rôles, votes,
-  messages et chants de l'utilisateur, alertes. Clé : `fanzone_state_v1`.
-- Les compteurs (supporters, membres, votes) = base de démo + contribution de l'utilisateur,
-  appliqués de façon idempotente (`_applyMembership`, `_applyVotes`).
+- `AppState` parle à un `FanZoneRepository` : écriture **optimiste** (UI mise à jour, puis appel distant ;
+  en cas d'échec, rechargement + `lastError`, affiché en toast par `MainShell`).
+- Contrat du repository : les compteurs renvoyés (supporters, membres, votes, fans) n'incluent **pas**
+  l'utilisateur courant ; `AppState` les ajoute de façon idempotente (`_applyMembership`, `_applyVotes`).
+- Chat temps réel : `openChannel`/`closeChannel` (stream Supabase sur `messages`), appelés par `ChatView`.
+- Alertes : locales (shared_preferences `fanzone_alerts_v1`), générées à partir des données
+  (rappels J-1, nouveaux events des clubs suivis depuis la dernière visite).
+- Mode local : données de démo (`buildSample*()`) à dates relatives + blob `fanzone_state_v1`.
+
+### Supabase (projet `lizbzscnskvsszoiszlt`)
+- Tables : `profiles`, `clubs`, `collectifs`, `events`, `event_members`, `collectif_members` (+ `role_id`),
+  `club_follows`, `messages` (`channel` = `event:<id>` / `col:<id>`), `chants`, `chant_votes`.
+- RLS : lecture publique des référentiels et compteurs ; chacun n'écrit que ses lignes (`auth.uid()`) ;
+  messages réservés aux membres du salon (`can_access_channel`). Realtime activé sur `messages`, `chants`, `chant_votes`.
+- Auth : **connexion anonyme** (`signInAnonymously`) + profil (`profiles.name`). Il faut que
+  « Anonymous sign-ins » soit activé dans le dashboard (Authentication → Sign In / Providers).
+- Seed : 6 clubs, 5 collectifs, 6 events (dates relatives via `current_date + n`), chants, messages.
+- Migrations appliquées : `fanzone_schema`, `fanzone_seed`, `fanzone_harden_function`.
 
 ### Fonctionnalités
 - Events : liste/recherche/filtres (sport, gratuit), carte, agenda, fiche complète
@@ -126,6 +158,8 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - `f10fdc5` écran Profil
 - `5d34a7c` intégration Firebase (non finalisée, retirée ensuite)
 - `0cc1bfa` CLAUDE.md
+- **v1.2 (24 nov. 2026)** — backend Supabase : `FanZoneRepository` (local / Supabase), auth anonyme,
+  schéma + RLS + seed, chat temps réel, écriture optimiste avec rattrapage, 4 tests.
 - **v1.1 (nov. 2026)** — refonte sans backend : AppState + persistance locale, suppression Firebase,
   nouveaux écrans Clubs / création d'event / chat / chants / rôles / alertes / matériel sonore / after,
   fiche event enrichie, login par prénom, widgets sticker, localisation FR, 3 tests unitaires,
@@ -141,12 +175,13 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - [ ] Partage d'event (share_plus)
 - [ ] Icône + splash + screenshots stores
 
-### Backend (quand la démo locale est validée)
-- Choix à faire : **Supabase** (Postgres + Auth + Realtime, pilotable par Claude via connecteur,
-  2 projets actifs max en gratuit) ou Firebase (nécessite des clics manuels dans la console).
-- Remplacer `LocalStore` par une implémentation distante et rendre les méthodes d'`AppState`
-  réellement asynchrones ; brancher l'auth dans `LoginScreen`. Les écrans ne changent pas.
-- Notifications push (remplace les alertes in-app), modération/signalement (exigé par les stores).
+### Backend
+- [x] Supabase branché (v1.2)
+- [ ] Activer « Anonymous sign-ins » dans le dashboard Supabase (manuel, une fois)
+- [ ] Contrainte DB sur la capacité des rôles (aujourd'hui vérifiée côté client)
+- [ ] Vrai compte (email/Google) lié au compte anonyme pour retrouver son profil sur un autre téléphone
+- [ ] Notifications push (remplace les alertes in-app), modération/signalement (exigé par les stores)
+- [ ] Le plan gratuit met le projet en pause après 7 jours sans requête → passer en Pro avant publication
 
 ### Plus tard
 - Boutique / merch (prototype React existant), thermomètre d'ambiance, badges, répétitions, défis chants.
@@ -159,6 +194,7 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - Widgets privés préfixés `_`
 - `.withValues(alpha: x)` et non `.withOpacity(x)` ; `Color.toARGB32()` et non `.value`
 - Couleurs via `FanZoneColors.xxx` (jamais de hex inline hors design system et données de démo)
+- Texte via `fz()` / `fzDisplay()` ; aucun emoji dans l'UI (les monogrammes et icônes Material les remplacent)
 - Tri des events toujours via `DateTime.parse(e.date)`
 - Toute mutation de données passe par une méthode d'`AppState` qui termine par `_persist()`
 - Un test dans `test/widget_test.dart` pour chaque nouvelle règle métier

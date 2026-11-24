@@ -155,23 +155,23 @@ class FanZoneEvent {
 
   String get vibeLabel {
     final pct = supporters / capacity;
-    if (pct < 0.15) return 'Besoin de vous 🙏';
-    if (pct < 0.45) return 'Ça monte ! 🌱';
-    return 'Ambiance de folie 🎉';
+    if (pct < 0.15) return 'Il manque du monde';
+    if (pct < 0.45) return 'Ça se remplit';
+    return 'Tribune pleine';
   }
 
   Color get vibeColor {
     final pct = supporters / capacity;
-    if (pct < 0.15) return const Color(0xFFC62828);
-    if (pct < 0.45) return const Color(0xFFE65C00);
-    return const Color(0xFF1B5E20);
+    if (pct < 0.15) return const Color(0xFFC81E1E);
+    if (pct < 0.45) return const Color(0xFF8A6400);
+    return const Color(0xFF1F8A4C);
   }
 
   Color get vibeBgColor {
     final pct = supporters / capacity;
-    if (pct < 0.15) return const Color(0xFFFFEBEE);
-    if (pct < 0.45) return const Color(0xFFFFF3E0);
-    return const Color(0xFFE8F5E9);
+    if (pct < 0.15) return const Color(0xFFFBE7E7);
+    if (pct < 0.45) return const Color(0xFFFBF3D6);
+    return const Color(0xFFE6F4EB);
   }
 
   double get fillPct => (supporters / capacity).clamp(0.0, 1.0);
@@ -272,10 +272,10 @@ List<FanZoneEvent> buildSampleEvents() => [
     supporters: 8,
     capacity: 50,
     joined: false,
-    color: const Color(0xFFFF4D4D),
-    bgColor: const Color(0xFFFFF0F0),
+    color: const Color(0xFFE0251B),
+    bgColor: const Color(0xFFFBE7E7),
     free: true,
-    tags: ['Derby 🔥', 'Famille 👨‍👩‍👧'],
+    tags: ['Derby', 'En famille'],
     afterBar: 'Le Café du Stade',
     afterAddress: '12 rue Nélaton, 75015 Paris',
     soundAllowed: ['tambour', 'trompette', 'chants', 'clapping', 'sifflet'],
@@ -303,11 +303,11 @@ List<FanZoneEvent> buildSampleEvents() => [
     supporters: 14,
     capacity: 80,
     joined: false,
-    color: const Color(0xFFFF8C00),
-    bgColor: const Color(0xFFFFF5E0),
+    color: const Color(0xFFF0471F),
+    bgColor: const Color(0xFFFCE9E3),
     free: false,
     price: 3,
-    tags: ['Finale 🏆', 'Jeunes 💪'],
+    tags: ['Finale', 'Jeunes'],
     afterBar: 'Chez Momo',
     afterAddress: '22 rue de la République, 93200 Saint-Denis',
     soundAllowed: ['clapping', 'chants', 'tambour'],
@@ -335,10 +335,10 @@ List<FanZoneEvent> buildSampleEvents() => [
     supporters: 6,
     capacity: 60,
     joined: false,
-    color: const Color(0xFF0096FF),
-    bgColor: const Color(0xFFE8F4FF),
+    color: const Color(0xFF1F4FD8),
+    bgColor: const Color(0xFFE6ECFB),
     free: true,
-    tags: ['Maintien ⚡', 'Équipe féminine 💙'],
+    tags: ['Maintien', 'Équipe féminine'],
     soundAllowed: ['clapping', 'chants', 'sifflet'],
     soundForbidden: ['tambour', 'sono', 'megaphone'],
   ),
@@ -363,10 +363,10 @@ List<FanZoneEvent> buildSampleEvents() => [
     supporters: 11,
     capacity: 200,
     joined: false,
-    color: const Color(0xFF00A86B),
-    bgColor: const Color(0xFFE0FFF4),
+    color: const Color(0xFF1F8A4C),
+    bgColor: const Color(0xFFE6F4EB),
     free: true,
-    tags: ['Course pop 🏃', 'Familles 👨‍👩‍👧'],
+    tags: ['Course populaire', 'En famille'],
     isNew: true,
     afterBar: 'La Brasserie de la Mairie',
     afterAddress: '2 place de la Mairie, 93500 Pantin',
@@ -395,10 +395,10 @@ List<FanZoneEvent> buildSampleEvents() => [
     supporters: 7,
     capacity: 80,
     joined: false,
-    color: const Color(0xFFE65C00),
-    bgColor: const Color(0xFFFFF0E0),
+    color: const Color(0xFFB8520A),
+    bgColor: const Color(0xFFFBEEE0),
     free: true,
-    tags: ['Cyclisme 🚴', 'Plein air 🌳'],
+    tags: ['Plein air'],
     isNew: true,
     soundAllowed: ['tambour', 'sifflet', 'vuvuzela', 'chants', 'clapping'],
     soundForbidden: ['sono'],
@@ -425,10 +425,10 @@ List<FanZoneEvent> buildSampleEvents() => [
     supporters: 3,
     capacity: 40,
     joined: false,
-    color: const Color(0xFF9B27AF),
-    bgColor: const Color(0xFFF6E8FF),
+    color: const Color(0xFF6A2FB5),
+    bgColor: const Color(0xFFEFE7FA),
     free: true,
-    tags: ['Combat 🥋', 'Jeunes 💪'],
+    tags: ['Jeunes'],
     isNew: true,
     soundAllowed: ['clapping', 'chants'],
     soundForbidden: ['tambour', 'djembe', 'trompette', 'vuvuzela', 'sifflet', 'sono', 'megaphone'],
