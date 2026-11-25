@@ -180,7 +180,7 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: FanZoneColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
+          side: const BorderSide(color: FanZoneColors.wallDeep, width: 1.5),
         ),
         title: Text('Repartir de zéro?', style: fzDisplay(fontSize: 21)),
         content: Text(
@@ -213,7 +213,7 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: FanZoneColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
+          side: const BorderSide(color: FanZoneColors.wallDeep, width: 1.5),
         ),
         title: Text(
           'Ton prénom',
@@ -348,8 +348,8 @@ class _StatsRow extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       decoration: BoxDecoration(
         color: FanZoneColors.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: FanZoneColors.dark, width: 1.5)
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: FanZoneColors.lift,
       ),
       child: Row(
         children: [
@@ -574,9 +574,8 @@ class _EmptyHint extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: FanZoneColors.cream,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: FanZoneColors.border, width: 1.5),
+          color: FanZoneColors.wall,
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Text(
           text,

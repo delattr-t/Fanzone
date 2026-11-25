@@ -94,15 +94,19 @@ class _ScarfPainter extends CustomPainter {
         final reserved = showStripes ? inset + band1 + gap + band2 + h * 0.2 : h * 0.3;
         final maxW = segW - 2 * reserved;
         if (maxW > h) {
-          final tp = TextPainter(
-            text: TextSpan(
-              text: label.toUpperCase(),
-              style: labelStyle.copyWith(fontSize: h * 0.36, letterSpacing: h * 0.05, height: 1),
-            ),
-            textDirection: TextDirection.ltr,
-            maxLines: 1,
-            ellipsis: '…',
-          )..layout(maxWidth: maxW);
+          TextPainter lay(double scale) => TextPainter(
+                text: TextSpan(
+                  text: label.toUpperCase(),
+                  style: labelStyle.copyWith(fontSize: h * 0.36 * scale, letterSpacing: h * 0.05 * scale, height: 1),
+                ),
+                textDirection: TextDirection.ltr,
+                maxLines: 1,
+                ellipsis: '…',
+              );
+          var tp = lay(1)..layout();
+          if (tp.width > maxW) {
+            tp = lay(math.max(0.7, maxW / tp.width))..layout(maxWidth: maxW);
+          }
           tp.paint(canvas, Offset(r.center.dx - tp.width / 2, r.center.dy - tp.height / 2));
         }
       }

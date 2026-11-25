@@ -495,7 +495,7 @@ class _ScarfRack extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     return SizedBox(
-      height: 118,
+      height: 132,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -516,7 +516,7 @@ class _ScarfRack extends StatelessWidget {
                     child: AnimatedOpacity(
                       duration: const Duration(milliseconds: 200),
                       opacity: following ? 1 : 0.92,
-                      child: Scarf.club(c.color, label: c.name, height: 44),
+                      child: Scarf.club(c.color, label: c.shortName, height: 44),
                     ),
                   ),
                 ),
@@ -528,11 +528,18 @@ class _ScarfRack extends StatelessWidget {
                         child: GestureDetector(
                           onTap: () => Navigator.push(
                               context, MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id))),
-                          child: Text(
-                            '${c.sport}, ${state.followersOf(c)} fans',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: fz(fontSize: 13, color: FanZoneColors.cement),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(c.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: fz(fontSize: 14, fontWeight: FontWeight.w700)),
+                              Text('${c.sport}, ${state.followersOf(c)} fans',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: fz(fontSize: 13, color: FanZoneColors.cement)),
+                            ],
                           ),
                         ),
                       ),

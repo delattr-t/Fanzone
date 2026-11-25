@@ -166,7 +166,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   decoration: BoxDecoration(
                     color: sel ? c.color : FanZoneColors.surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: sel ? c.color : FanZoneColors.dark, width: 1.5),
+                    border: Border.all(color: sel ? c.color : FanZoneColors.wallDeep, width: 1.5),
                   ),
                   child: Text(c.shortName, style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: sel ? Colors.white : FanZoneColors.dark)),
                 ),
@@ -191,7 +191,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     decoration: BoxDecoration(
                       color: sel ? FanZoneColors.dark : FanZoneColors.surface,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: FanZoneColors.dark, width: 1.5),
+                      border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
                     ),
                     child: Center(child: Text('${s.$2} ${s.$1}', style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: sel ? Colors.white : FanZoneColors.dark))),
                   ),
@@ -246,7 +246,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   decoration: BoxDecoration(
                     color: sel ? FanZoneColors.dark : FanZoneColors.surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: FanZoneColors.dark, width: 1.5),
+                    border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
                   ),
                   child: Text(k.$2, style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: sel ? Colors.white : FanZoneColors.dark)),
                 ),
@@ -388,7 +388,7 @@ class _PickerTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: FanZoneColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: FanZoneColors.dark, width: 1.5),
+          border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
         ),
         child: Text(label, style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.dark)),
       ),
@@ -412,7 +412,7 @@ class _Toggle extends StatelessWidget {
           decoration: BoxDecoration(
             color: active ? FanZoneColors.dark : FanZoneColors.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: FanZoneColors.dark, width: 1.5),
+            border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
           ),
           child: Center(child: Text(label, style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: active ? Colors.white : FanZoneColors.dark))),
         ),

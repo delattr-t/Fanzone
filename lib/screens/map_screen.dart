@@ -117,11 +117,13 @@ class _MapScreenState extends State<MapScreen> {
               onTap: (_, __) => setState(() => _selectedId = null),
             ),
             children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'fr.fanzone.app',
-                maxNativeZoom: 19,
-                tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: _woolTint, child: tile),
+              ColorFiltered(
+                colorFilter: _woolTint,
+                child: TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'fr.fanzone.app',
+                  maxNativeZoom: 19,
+                ),
               ),
               MarkerLayer(
                 markers: [

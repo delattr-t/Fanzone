@@ -131,7 +131,7 @@ class _ScarfBundle extends StatelessWidget {
   static const _scarves = [
     (Color(0xFFE2462B), 'On est là', -0.05),
     (Color(0xFF1F7A4D), 'Même à vingt', 0.035),
-    (Color(0xFF1F5FBF), 'Allez les petits clubs', -0.02),
+    (Color(0xFF1F5FBF), 'Tous au stade', -0.02),
   ];
 
   @override

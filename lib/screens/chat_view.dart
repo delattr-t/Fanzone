@@ -156,7 +156,7 @@ class _ChatViewState extends State<ChatView> {
                       decoration: BoxDecoration(
                         color: FanZoneColors.background,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: FanZoneColors.dark, width: 1.5),
+                        border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
                       ),
                       child: TextField(
                         controller: _ctrl,
@@ -183,7 +183,7 @@ class _ChatViewState extends State<ChatView> {
                       decoration: BoxDecoration(
                         color: widget.accent,
                         shape: BoxShape.circle,
-                        border: Border.all(color: FanZoneColors.dark, width: 1.5)
+                        border: Border.all(color: FanZoneColors.wallDeep, width: 1.5)
                       ),
                       child: const Center(child: Text('', style: TextStyle(fontSize: 18))),
                     ),
@@ -256,7 +256,7 @@ class _Bubble extends StatelessWidget {
             bottomLeft: Radius.circular(mine ? 14 : 4),
             bottomRight: Radius.circular(mine ? 4 : 14),
           ),
-          border: Border.all(color: FanZoneColors.dark, width: 1.5)
+          border: Border.all(color: FanZoneColors.wallDeep, width: 1.5)
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
