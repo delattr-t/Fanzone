@@ -61,4 +61,4 @@ Voir `CLAUDE.md` pour l'architecture détaillée, l'historique et le backlog.
 ## Charte « Écharpe »
 
 Le geste signature : chaque club est représenté par son écharpe tricotée, dessinée en code (rayures, mailles, lettrage, franges).
-Fond laine `#F6EDE0`, encre brune `#2B1A12`, braise `#E2462B` pour l'action, soleil `#FFB420` pour la mobilisation. Typo Bricolage Grotesque. Coins arrondis, ombres douces.
+Fond laine `#F6EDE0`, encre brune `#2B1A12`, braise `#E2462B` pour l'action, soleil `#FFB420` pour la mobilisation. Deux jeux typographiques au choix : « Écharpe » (Bricolage Grotesque) et « Gazette » (Caprasimo, Atkinson Hyperlegible, Jersey 15 sur les écharpes), via `?typo=gazette` ou le profil. Coins arrondis, ombres douces.

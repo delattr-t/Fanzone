@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/event.dart';
 import '../theme/app_theme.dart';
 import '../widgets/scarf.dart';
@@ -147,6 +148,7 @@ class ProfileScreen extends StatelessWidget {
             ),
 
           // ── DÉCONNEXION ───────────────────────────────────────
+          const SliverToBoxAdapter(child: _TypographyChooser()),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
@@ -584,6 +586,63 @@ class _EmptyHint extends StatelessWidget {
             color: FanZoneColors.textSecondary,
             height: 1.5),
         ),
+      ),
+    );
+  }
+}
+
+/// Choix du jeu typographique. Les noms sont écrits dans leur propre police, en aperçu.
+class _TypographyChooser extends StatelessWidget {
+  const _TypographyChooser();
+
+  @override
+  Widget build(BuildContext context) {
+    final current = fanZoneType.value;
+    Widget option(FanZoneType t, String name, String hint, TextStyle preview) {
+      final active = current == t;
+      return Expanded(
+        child: Pressable(
+          onTap: active ? null : () => switchTypography(t),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: active ? FanZoneColors.hiVis : FanZoneColors.paper,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: active ? null : FanZoneColors.lift,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: preview),
+                const SizedBox(height: 2),
+                Text(hint, style: fz(fontSize: 13, color: active ? FanZoneColors.ink : FanZoneColors.cement)),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Typographie', style: fzDisplay(fontSize: 26)),
+          const SizedBox(height: 4),
+          Text('Même app, deux voix. Change quand tu veux.', style: fz(fontSize: 14, color: FanZoneColors.cement)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              option(FanZoneType.echarpe, 'Écharpe', 'Bricolage Grotesque',
+                  GoogleFonts.bricolageGrotesque(fontSize: 20, fontWeight: FontWeight.w800, color: FanZoneColors.ink)),
+              const SizedBox(width: 10),
+              option(FanZoneType.gazette, 'Gazette', 'Caprasimo et Atkinson',
+                  GoogleFonts.caprasimo(fontSize: 20, color: FanZoneColors.ink)),
+            ],
+          ),
+        ],
       ),
     );
   }

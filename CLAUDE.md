@@ -16,7 +16,7 @@ de rejoindre des collectifs de supporters et de s'organiser (chat, chants, rôle
 | Couche | Technologie |
 |---|---|
 | Framework | Flutter (Dart ≥ 3.3) |
-| Fonts | Google Fonts — Bricolage Grotesque |
+| Fonts | Google Fonts — Bricolage Grotesque (jeu « Écharpe ») ou Caprasimo + Atkinson Hyperlegible + Jersey 15 (jeu « Gazette ») |
 | Carte | flutter_map 7.0 + OpenStreetMap |
 | Géolocalisation | geolocator 13.0 |
 | Backend | **Supabase** (projet `fanzone`, région eu-west-3 Paris) : Postgres + Auth anonyme + Realtime. `AppConfig.useSupabase = false` pour revenir au mode 100 % local |
@@ -89,8 +89,13 @@ l'écharpe tricotée aux couleurs du club ; c'est le geste signature de l'app.
   (encre brune) · `flare #E2462B` (braise : action) · `hiVis #FFB420` (soleil : jauge, sélection,
   « membre ») · `wall #EFE3D2` / `wallDeep #E3D3BD` (sable, filets) · `cement #7A6253` (texte
   secondaire) · `night #2B1A12` (blocs soir de match) · `cream #FFF3E0` (rayures des écharpes).
-- **Typo** : Bricolage Grotesque partout (`fz()` corps, `fzDisplay()` titres w800 ; facteur 0.86
-  dans `fzDisplay` car les tailles ont été calibrées pour un condensé).
+- **Typo — deux jeux** (`FanZoneType`, notifier `fanZoneType` dans `app_theme.dart`) :
+  - `echarpe` (défaut) : Bricolage Grotesque partout (`fzDisplay` w800, facteur 0.86) ;
+  - `gazette` : Caprasimo pour les titres (facteur 0.8, poids unique), Atkinson Hyperlegible pour
+    le texte (400/700), Jersey 15 (lettres de maillot tricoté) pour le lettrage des écharpes.
+  Toujours passer par `fz()`, `fzDisplay()`, `fzScarf()`. Choix : `?typo=gazette` dans l'URL, ou
+  « Typographie » dans le profil (`switchTypography`), mémorisé (`fanzone_typo`). Les polices sont
+  préchargées (`loadTypography`) avant l'affichage, car les écharpes sont peintes sur un canvas.
 - **Formes** : cartes rayon 20–28, boutons en pilule, ombre douce `FanZoneColors.lift`, pas de
   contour noir. Écussons ronds (`Monogram`), éphémérides (`DateBlock`), foule de têtes
   (`CrowdDots`), bouton `JoinPill` (braise → soleil une fois engagé).
@@ -163,6 +168,7 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - `f10fdc5` écran Profil
 - `5d34a7c` intégration Firebase (non finalisée, retirée ensuite)
 - `0cc1bfa` CLAUDE.md
+- **v1.5 (25 nov. 2026)** — deuxième jeu typographique « Gazette » (Caprasimo, Atkinson Hyperlegible, Jersey 15), au choix.
 - **v1.4 (25 nov. 2026)** — design « Écharpe » (chaleureux) ; carte réparée (CARTO exigeait une clé → OSM).
 - **v1.3 (24 nov. 2026)** — design « Affiche de match » (remplacé par la v1.4).
 - **v1.2 (24 nov. 2026)** — backend Supabase : `FanZoneRepository` (local / Supabase), auth anonyme,
