@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Direction « Écharpe » : la laine du supporter. Fond laine chaude, encre brun
 /// profond, braise pour l'action, soleil pour la mobilisation. Chaque club est
@@ -46,6 +47,27 @@ class FanZoneColors {
       ];
 }
 
+/// Deux jeux typographiques sur la même charte :
+/// - `echarpe` (par défaut) : Bricolage Grotesque partout ;
+/// - `gazette` : Caprasimo pour les titres (enseigne de buvette), Atkinson
+///   Hyperlegible pour le texte, Jersey 15 (lettres de maillot tricoté) sur les écharpes.
+/// Choix via `?typo=gazette` dans l'URL ou depuis le profil ; mémorisé localement.
+enum FanZoneType { echarpe, gazette }
+
+final fanZoneType = ValueNotifier<FanZoneType>(FanZoneType.echarpe);
+
+const typoPrefKey = 'fanzone_typo';
+
+/// Change de jeu typographique : charge les polices, mémorise, puis l'app se reconstruit.
+Future<void> switchTypography(FanZoneType t) async {
+  await loadTypography(t);
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(typoPrefKey, t.name);
+  fanZoneType.value = t;
+}
+
+bool get _gazette => fanZoneType.value == FanZoneType.gazette;
+
 TextStyle fz({
   double? fontSize,
   FontWeight? fontWeight,
@@ -54,34 +76,85 @@ TextStyle fz({
   double? letterSpacing,
   FontStyle? fontStyle,
   TextDecoration? decoration,
-}) =>
-    GoogleFonts.bricolageGrotesque(
-      fontSize: fontSize,
-      fontWeight: fontWeight ?? FontWeight.w400,
-      color: color ?? FanZoneColors.ink,
-      height: height,
-      letterSpacing: letterSpacing,
-      fontStyle: fontStyle,
-      decoration: decoration,
-      decorationColor: color ?? FanZoneColors.ink,
-    );
+}) {
+  final style = _gazette ? GoogleFonts.atkinsonHyperlegible : GoogleFonts.bricolageGrotesque;
+  final w = fontWeight ?? FontWeight.w400;
+  return style(
+    fontSize: fontSize,
+    fontWeight: _gazette ? (w.value >= 600 ? FontWeight.w700 : FontWeight.w400) : w,
+    color: color ?? FanZoneColors.ink,
+    height: height,
+    letterSpacing: letterSpacing,
+    fontStyle: fontStyle,
+    decoration: decoration,
+    decorationColor: color ?? FanZoneColors.ink,
+  );
+}
 
-/// Les tailles des écrans ont été posées pour un caractère condensé ; Bricolage
-/// est plus large, d'où le facteur 0.86 qui garde les mêmes encombrements.
+/// Les tailles des écrans ont été posées pour un caractère condensé ; les titres
+/// réels sont plus larges, d'où un facteur d'échelle propre à chaque jeu.
 TextStyle fzDisplay({
   double? fontSize,
   FontWeight? fontWeight,
   Color? color,
   double? height,
   double? letterSpacing,
-}) =>
-    GoogleFonts.bricolageGrotesque(
-      fontSize: fontSize == null ? null : fontSize * 0.86,
-      fontWeight: fontWeight ?? FontWeight.w800,
+}) {
+  if (_gazette) {
+    return GoogleFonts.caprasimo(
+      fontSize: fontSize == null ? null : fontSize * 0.8,
+      fontWeight: FontWeight.w400,
       color: color ?? FanZoneColors.ink,
-      height: height ?? 1.05,
-      letterSpacing: letterSpacing ?? -0.4,
+      height: height ?? 1.08,
+      letterSpacing: letterSpacing == null ? 0 : letterSpacing * 0.3,
     );
+  }
+  return GoogleFonts.bricolageGrotesque(
+    fontSize: fontSize == null ? null : fontSize * 0.86,
+    fontWeight: fontWeight ?? FontWeight.w800,
+    color: color ?? FanZoneColors.ink,
+    height: height ?? 1.05,
+    letterSpacing: letterSpacing ?? -0.4,
+  );
+}
+
+/// Lettrage tricoté des écharpes.
+TextStyle fzScarf({required double fontSize, required Color color, double letterSpacing = 0}) {
+  if (_gazette) {
+    return GoogleFonts.jersey15(
+      fontSize: fontSize * 1.3,
+      color: color,
+      height: 1,
+      letterSpacing: letterSpacing * 0.6,
+    );
+  }
+  return GoogleFonts.bricolageGrotesque(
+    fontSize: fontSize,
+    fontWeight: FontWeight.w800,
+    color: color,
+    height: 1,
+    letterSpacing: letterSpacing,
+  );
+}
+
+/// Attend que les fichiers de police du jeu choisi soient chargés, pour que les
+/// écharpes (dessinées sur un canvas) ne s'affichent pas dans une police de repli.
+Future<void> loadTypography(FanZoneType type) async {
+  final samples = type == FanZoneType.gazette
+      ? [
+          GoogleFonts.caprasimo(),
+          GoogleFonts.jersey15(),
+          GoogleFonts.atkinsonHyperlegible(fontWeight: FontWeight.w400),
+          GoogleFonts.atkinsonHyperlegible(fontWeight: FontWeight.w700),
+        ]
+      : [
+          for (final w in [FontWeight.w400, FontWeight.w500, FontWeight.w600, FontWeight.w700, FontWeight.w800])
+            GoogleFonts.bricolageGrotesque(fontWeight: w),
+        ];
+  try {
+    await GoogleFonts.pendingFonts(samples);
+  } catch (_) {}
+}
 
 class AppTheme {
   static ThemeData get theme => ThemeData(
@@ -99,7 +172,7 @@ class AppTheme {
           selectionColor: FanZoneColors.hiVis.withValues(alpha: 0.45),
           selectionHandleColor: FanZoneColors.flare,
         ),
-        textTheme: GoogleFonts.bricolageGrotesqueTextTheme().copyWith(
+        textTheme: (_gazette ? GoogleFonts.atkinsonHyperlegibleTextTheme() : GoogleFonts.bricolageGrotesqueTextTheme()).copyWith(
           displayLarge: fzDisplay(fontSize: 44),
           headlineMedium: fzDisplay(fontSize: 30),
           titleLarge: fzDisplay(fontSize: 24),

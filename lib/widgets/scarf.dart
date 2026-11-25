@@ -41,7 +41,8 @@ class Scarf extends StatelessWidget {
           segments: segments.isEmpty ? const [ScarfSegment(FanZoneColors.flare)] : segments,
           fringe: fringe,
           stripe: stripe,
-          labelStyle: fzDisplay(fontSize: 10, color: stripe),
+          labelStyle: fzScarf(fontSize: 10, color: stripe),
+          labelScale: fanZoneType.value == FanZoneType.gazette ? 1.3 : 1.0,
         ),
       ),
     );
@@ -53,8 +54,15 @@ class _ScarfPainter extends CustomPainter {
   final bool fringe;
   final Color stripe;
   final TextStyle labelStyle;
+  final double labelScale;
 
-  _ScarfPainter({required this.segments, required this.fringe, required this.stripe, required this.labelStyle});
+  _ScarfPainter({
+    required this.segments,
+    required this.fringe,
+    required this.stripe,
+    required this.labelStyle,
+    this.labelScale = 1,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -97,7 +105,11 @@ class _ScarfPainter extends CustomPainter {
           TextPainter lay(double scale) => TextPainter(
                 text: TextSpan(
                   text: label.toUpperCase(),
-                  style: labelStyle.copyWith(fontSize: h * 0.36 * scale, letterSpacing: h * 0.05 * scale, height: 1),
+                  style: labelStyle.copyWith(
+                    fontSize: h * 0.36 * labelScale * scale,
+                    letterSpacing: h * 0.05 * scale,
+                    height: 1,
+                  ),
                 ),
                 textDirection: TextDirection.ltr,
                 maxLines: 1,
@@ -169,5 +181,5 @@ class _ScarfPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ScarfPainter old) =>
-      old.segments != segments || old.fringe != fringe || old.stripe != stripe;
+      old.segments != segments || old.fringe != fringe || old.stripe != stripe || old.labelStyle != labelStyle;
 }

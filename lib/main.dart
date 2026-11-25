@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config.dart';
@@ -31,10 +32,24 @@ void main() async {
   } else {
     repo = LocalRepository(LocalStore());
   }
+  fanZoneType.value = await _initialTypography();
+  await loadTypography(fanZoneType.value);
   final state = AppState(repo);
   await state.load();
   runApp(FanZoneApp(state: state));
 }
+
+Future<FanZoneType> _initialTypography() async {
+  final fromUrl = Uri.base.queryParameters['typo'];
+  final prefs = await SharedPreferences.getInstance();
+  if (fromUrl != null) {
+    final t = (fromUrl == 'gazette' || fromUrl == '2') ? FanZoneType.gazette : FanZoneType.echarpe;
+    await prefs.setString(typoPrefKey, t.name);
+    return t;
+  }
+  return prefs.getString(typoPrefKey) == FanZoneType.gazette.name ? FanZoneType.gazette : FanZoneType.echarpe;
+}
+
 
 class FanZoneApp extends StatelessWidget {
   final AppState state;
@@ -44,7 +59,11 @@ class FanZoneApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScope(
       state: state,
-      child: MaterialApp(
+      child: ValueListenableBuilder<FanZoneType>(
+        valueListenable: fanZoneType,
+        builder: (_, type, __) => KeyedSubtree(
+          key: ValueKey(type),
+          child: MaterialApp(
         title: 'FanZone',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,
@@ -56,6 +75,8 @@ class FanZoneApp extends StatelessWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         home: const _AuthGate(),
+          ),
+        ),
       ),
     );
   }
