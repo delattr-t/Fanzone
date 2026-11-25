@@ -121,8 +121,7 @@ class _MapScreenState extends State<MapScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'fr.fanzone.app',
                 maxNativeZoom: 19,
-                tilesContainerBuilder: (context, container) =>
-                    ColorFiltered(colorFilter: _woolTint, child: container),
+                tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: _woolTint, child: tile),
               ),
               MarkerLayer(
                 markers: [

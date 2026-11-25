@@ -107,7 +107,7 @@ class _ChatViewState extends State<ChatView> {
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
             decoration: const BoxDecoration(
               color: FanZoneColors.surface,
-              border: Border(top: BorderSide(color: FanZoneColors.dark, width: 1.5)),
+              border: Border(top: BorderSide(color: FanZoneColors.wallDeep, width: 1)),
             ),
             child: Row(
               children: [
@@ -145,7 +145,7 @@ class _ChatViewState extends State<ChatView> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             decoration: const BoxDecoration(
               color: FanZoneColors.surface,
-              border: Border(top: BorderSide(color: FanZoneColors.dark, width: 1.5)),
+              border: Border(top: BorderSide(color: FanZoneColors.wallDeep, width: 1)),
             ),
             child: SafeArea(
               top: false,

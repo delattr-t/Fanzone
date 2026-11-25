@@ -4,6 +4,7 @@ import '../models/event.dart';
 import '../models/sound_gear.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/scarf.dart';
 import '../widgets/sticker.dart';
 import 'chat_view.dart';
 import 'clubs_screen.dart';
@@ -69,8 +70,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: Container(height: 4, color: ev.color),
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+            child: Scarf.club(ev.color, label: ev.club, height: 40),
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -101,13 +105,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const StickerLabel('Pourquoi venir?'),
+                  const StickerLabel('Pourquoi venir\u00A0?'),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: FanZoneColors.cream,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border(left: BorderSide(color: ev.color, width: 1.5)),
                     ),
                     child: Text(
                       '"${ev.description}"',

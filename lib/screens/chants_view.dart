@@ -25,8 +25,7 @@ class ChantsView extends StatelessWidget {
  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
  decoration: const BoxDecoration(
  color: FanZoneColors.background,
- borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
- border: Border(top: BorderSide(color: FanZoneColors.dark, width: 1.5)),
+ borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
  ),
  child: SingleChildScrollView(
  child: Column(
@@ -252,7 +251,6 @@ class _ChantCardState extends State<_ChantCard> {
               decoration: BoxDecoration(
                 color: FanZoneColors.cream,
                 borderRadius: BorderRadius.circular(14),
-                border: Border(left: BorderSide(color: widget.color, width: 1.5)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
