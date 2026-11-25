@@ -321,8 +321,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
             // ── CTA ──
             StickerButton(
-              label: ev.joined ? 'Je viens! (quitter)' : 'Je viens soutenir ce club',
-              color: ev.joined ? FanZoneColors.success : FanZoneColors.dark,
+              label: ev.joined ? 'Tu y vas. Je ne peux plus venir' : 'J\'y vais, je viens soutenir',
+              color: ev.joined ? FanZoneColors.ink : FanZoneColors.flare,
               outlined: ev.joined,
               fontSize: 16,
               onTap: ev.isPast ? null : widget.onToggleJoin,

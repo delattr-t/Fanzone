@@ -195,7 +195,7 @@ class _ChantCardState extends State<_ChantCard> {
     final c = widget.chant;
     return StickerBlock(
       margin: const EdgeInsets.only(bottom: 10),
-      borderColor: widget.voted ? widget.color : FanZoneColors.dark,
+      borderColor: widget.voted ? widget.color : null,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

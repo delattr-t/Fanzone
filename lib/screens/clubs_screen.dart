@@ -4,6 +4,7 @@ import '../models/club.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/event_card.dart';
+import '../widgets/scarf.dart';
 import '../widgets/sticker.dart';
 import 'collectif_detail_screen.dart';
 import 'event_detail_screen.dart';
@@ -55,26 +56,18 @@ class _ClubCard extends StatelessWidget {
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: club.id))),
       child: StickerBlock(
         margin: const EdgeInsets.only(bottom: 10),
-        borderColor: following ? club.color : FanZoneColors.dark,
+        borderColor: following ? club.color : null,
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Container(
-              width: 52, height: 52,
-              decoration: BoxDecoration(
-                color: club.bgColor,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: club.color, width: 1.5),
-              ),
-              child: Center(child: Monogram(name: club.name, color: club.color, size: 44)),
-            ),
+            Monogram(name: club.name, color: club.color, size: 50),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(club.name, style: fzDisplay(fontSize: 18, color: FanZoneColors.dark)),
-                  Text('${club.sport}, ${club.city}', style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textLight)),
+                  Text('${club.sport}, ${club.city}', style: fz(fontSize: 13, fontWeight: FontWeight.w500, color: FanZoneColors.textLight)),
                   const SizedBox(height: 4),
                   Text(
                     next.isEmpty
@@ -82,7 +75,7 @@ class _ClubCard extends StatelessWidget {
                         : '${state.followersOf(club)} fans, ${next.first.dateFormatted}: ${next.first.match}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary),
+                    style: fz(fontSize: 13, fontWeight: FontWeight.w500, color: FanZoneColors.textSecondary),
                   ),
                 ],
               ),
@@ -109,19 +102,18 @@ class _FollowButton extends StatelessWidget {
       onTap: () async {
         await state.toggleFollowClub(club.id);
         if (context.mounted) {
-          showFanToast(context, following ? 'Tu ne suis plus ${club.name}' : 'Tu suis ${club.name}!');
+          showFanToast(context, following ? 'Tu ne suis plus ${club.name}' : 'Tu suis ${club.name}.');
         }
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 18, vertical: compact ? 8 : 11),
         decoration: BoxDecoration(
-          color: following ? club.bgColor : club.color,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: club.color, width: 1.5)
+          color: following ? FanZoneColors.hiVis : FanZoneColors.flare,
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
-          following ? (compact ? 'Suivi' : 'Suivi') : (compact ? '+ Suivre' : '+ Suivre le club'),
-          style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: following ? club.color : Colors.white),
+          following ? 'Suivi' : (compact ? 'Suivre' : 'Suivre le club'),
+          style: fz(fontSize: 14, fontWeight: FontWeight.w700, color: following ? FanZoneColors.ink : Colors.white),
         ),
       ),
     );
@@ -146,20 +138,24 @@ class ClubDetailScreen extends StatelessWidget {
       backgroundColor: FanZoneColors.background,
       appBar: AppBar(
         title: Text(club.name),
-        bottom: PreferredSize(preferredSize: const Size.fromHeight(4), child: Container(height: 4, color: club.color)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+            child: Scarf.club(club.color, label: club.name, height: 40),
+          ),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(0, 16, 0, 32),
         children: [
           _Pad(child: StickerBlock(
-            borderColor: club.color,
-            color: club.bgColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${club.sport}, ${club.city}', style: fz(fontSize: 12, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
+                Text('${club.sport}, ${club.city}', style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
                 const SizedBox(height: 6),
-                Text(club.description, style: fz(fontSize: 13, fontWeight: FontWeight.w600, color: FanZoneColors.dark, height: 1.5)),
+                Text(club.description, style: fz(fontSize: 15, height: 1.5)),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -189,12 +185,12 @@ class ClubDetailScreen extends StatelessWidget {
           const SizedBox(height: 10),
           _Pad(child: StickerLabel('Collectifs du club (${cols.length})')),
           if (cols.isEmpty)
-            const EmptyHint(emoji: '', text: 'Aucun collectif pour ce club… Lance le premier avec tes potes!'),
+            const EmptyHint(emoji: '', text: 'Aucun collectif pour ce club pour l\'instant. Lance le premier avec tes potes.'),
           ...cols.map((c) => _Pad(child: GestureDetector(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CollectifDetailScreen(collectifId: c.id))),
                 child: StickerBlock(
                   margin: const EdgeInsets.only(bottom: 10),
-                  borderColor: c.joined ? c.color : FanZoneColors.dark,
+                  borderColor: c.joined ? c.color : null,
                   padding: const EdgeInsets.all(12),
                   child: Row(
                     children: [
@@ -205,11 +201,11 @@ class ClubDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(c.name, style: fz(fontSize: 14, fontWeight: FontWeight.w700, color: c.joined ? c.color : FanZoneColors.dark)),
-                            Text('${c.members} membres', style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textLight)),
+                            Text('${c.members} membres', style: fz(fontSize: 13, fontWeight: FontWeight.w500, color: FanZoneColors.textLight)),
                           ],
                         ),
                       ),
-                      Text(c.joined ? 'Membre' : 'Voir →', style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: c.joined ? FanZoneColors.success : FanZoneColors.textLight)),
+                      Text(c.joined ? 'Membre' : 'Voir', style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: c.joined ? FanZoneColors.ink : FanZoneColors.flare)),
                     ],
                   ),
                 ),

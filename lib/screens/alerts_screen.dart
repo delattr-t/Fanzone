@@ -70,7 +70,7 @@ class _AlertsScreenState extends State<AlertsScreen> {
               child: StickerBlock(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(12),
-                borderColor: ev?.color ?? FanZoneColors.dark,
+                stripe: ev?.color,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
