@@ -106,7 +106,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: FanZoneColors.cream,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border(left: BorderSide(color: ev.color, width: 1.5)),
                     ),
                     child: Text(
@@ -195,7 +195,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
                               color: c.joined ? c.bgColor : FanZoneColors.cream,
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: c.joined ? c.color : FanZoneColors.border, width: 1.5),
                             ),
                             child: Row(
@@ -257,7 +257,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ],
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: FanZoneColors.cream, borderRadius: BorderRadius.circular(3)),
+                    decoration: BoxDecoration(color: FanZoneColors.cream, borderRadius: BorderRadius.circular(14)),
                     child: Text('${soundNoteForVenueKind(ev.venueKind)}',
                         style: fz(fontSize: 11, fontWeight: FontWeight.w500, color: FanZoneColors.textSecondary, height: 1.4)),
                   ),

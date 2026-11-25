@@ -165,7 +165,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: sel ? c.color : FanZoneColors.surface,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: sel ? c.color : FanZoneColors.dark, width: 1.5),
                   ),
                   child: Text(c.shortName, style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: sel ? Colors.white : FanZoneColors.dark)),
@@ -190,7 +190,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: sel ? FanZoneColors.dark : FanZoneColors.surface,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: FanZoneColors.dark, width: 1.5),
                     ),
                     child: Center(child: Text('${s.$2} ${s.$1}', style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: sel ? Colors.white : FanZoneColors.dark))),
@@ -245,7 +245,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: sel ? FanZoneColors.dark : FanZoneColors.surface,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: FanZoneColors.dark, width: 1.5),
                   ),
                   child: Text(k.$2, style: fz(fontSize: 12, fontWeight: FontWeight.w700, color: sel ? Colors.white : FanZoneColors.dark)),
@@ -335,7 +335,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: ok ? FanZoneColors.successBg : no ? FanZoneColors.errorBg : FanZoneColors.surface,
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: color, width: 1.5),
                         ),
                         child: Text('${g.label}${ok ? ' autorisé' : no ? ' interdit' : ''}',
@@ -347,7 +347,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: FanZoneColors.cream, borderRadius: BorderRadius.circular(3)),
+                  decoration: BoxDecoration(color: FanZoneColors.cream, borderRadius: BorderRadius.circular(14)),
                   child: Text('${soundNoteForVenueKind(_venueKind)}',
                       style: fz(fontSize: 11, fontWeight: FontWeight.w500, color: FanZoneColors.textSecondary, height: 1.4)),
                 ),
@@ -387,7 +387,7 @@ class _PickerTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: FanZoneColors.surface,
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: FanZoneColors.dark, width: 1.5),
         ),
         child: Text(label, style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.dark)),
@@ -411,7 +411,7 @@ class _Toggle extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: active ? FanZoneColors.dark : FanZoneColors.surface,
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(color: FanZoneColors.dark, width: 1.5),
           ),
           child: Center(child: Text(label, style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: active ? Colors.white : FanZoneColors.dark))),

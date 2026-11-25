@@ -25,7 +25,7 @@ class ChantsView extends StatelessWidget {
  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
  decoration: const BoxDecoration(
  color: FanZoneColors.background,
- borderRadius: BorderRadius.vertical(top: Radius.circular(3)),
+ borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
  border: Border(top: BorderSide(color: FanZoneColors.dark, width: 1.5)),
  ),
  child: SingleChildScrollView(
@@ -78,7 +78,7 @@ class ChantsView extends StatelessWidget {
               backgroundColor: col.color,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(14),
                 side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
               ),
               label: Text('Proposer un chant', style: fz(fontWeight: FontWeight.w700)),
@@ -147,7 +147,7 @@ class _Podium extends StatelessWidget {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: i == 0 ? color : color.withValues(alpha: 0.5 - i * 0.12),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
                       border: Border.all(color: FanZoneColors.dark, width: 1.5)
                     ),
                     child: Column(
@@ -233,7 +233,7 @@ class _ChantCardState extends State<_ChantCard> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: widget.voted ? widget.color : FanZoneColors.surface,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: widget.voted ? widget.color : FanZoneColors.dark, width: 1.5),
                   ),
                   child: Text(
@@ -251,7 +251,7 @@ class _ChantCardState extends State<_ChantCard> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: FanZoneColors.cream,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(14),
                 border: Border(left: BorderSide(color: widget.color, width: 1.5)),
               ),
               child: Column(

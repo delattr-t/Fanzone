@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'scarf.dart';
 
-/// Composants de l'affiche : encre noire, règles, aucune ombre.
-
-/// Cadre à l'encre. `stripe` = rayure d'écharpe (couleur du club) à gauche.
+/// Carte en laine claire, coins ronds, ombre douce. `stripe` = lisière tricotée
+/// aux couleurs du club en haut de la carte.
 class StickerBlock extends StatelessWidget {
   final Widget child;
   final Color? borderColor;
@@ -18,27 +18,30 @@ class StickerBlock extends StatelessWidget {
     this.borderColor,
     this.color,
     this.stripe,
-    this.padding = const EdgeInsets.all(14),
+    this.padding = const EdgeInsets.all(16),
     this.margin = EdgeInsets.zero,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bc = borderColor ?? FanZoneColors.ink;
     return Container(
       width: double.infinity,
       margin: margin,
       decoration: BoxDecoration(
         color: color ?? FanZoneColors.paper,
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: bc, width: 1.5),
+        borderRadius: BorderRadius.circular(20),
+        border: borderColor == null ? null : Border.all(color: borderColor!, width: 2),
+        boxShadow: FanZoneColors.lift,
       ),
+      clipBehavior: Clip.antiAlias,
       child: stripe == null
           ? Padding(padding: padding, child: child)
-          : Container(
-              decoration: BoxDecoration(border: Border(left: BorderSide(color: stripe!, width: 6))),
-              padding: padding,
-              child: child,
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Scarf.club(stripe!, height: 12, fringe: false),
+                Padding(padding: padding, child: child),
+              ],
             ),
     );
   }
@@ -77,7 +80,6 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-/// Petit intitulé au-dessus d'un bloc (phrase en minuscules, pas de capitales).
 class StickerLabel extends StatelessWidget {
   final String text;
   const StickerLabel(this.text, {super.key});
@@ -86,12 +88,11 @@ class StickerLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(text, style: fz(fontSize: 13, fontWeight: FontWeight.w600, color: FanZoneColors.cement)),
+      child: Text(text, style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.cement)),
     );
   }
 }
 
-/// Titre de section : condensé, souligné d'une règle épaisse.
 class SectionTitle extends StatelessWidget {
   final String text;
   final String? trailing;
@@ -100,35 +101,28 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(child: Text(text, style: fzDisplay(fontSize: 26))),
-            if (trailing != null)
-              GestureDetector(
-                onTap: onTrailing,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 3),
-                  child: Text(
-                    trailing!,
-                    style: fz(fontSize: 14, fontWeight: FontWeight.w600, decoration: TextDecoration.underline),
-                  ),
-                ),
+        Expanded(child: Text(text, style: fzDisplay(fontSize: 28))),
+        if (trailing != null)
+          Pressable(
+            onTap: onTrailing,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                trailing!,
+                style: fz(fontSize: 14, fontWeight: FontWeight.w700, color: FanZoneColors.flare),
               ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Container(height: 3, color: FanZoneColors.ink),
+            ),
+          ),
       ],
     );
   }
 }
 
-/// Monogramme de club : deux lettres dans la couleur du club.
+/// Écusson de club : pastille à la couleur du club, liseré crème comme une
+/// rayure d'écharpe, initiales tricotées.
 class Monogram extends StatelessWidget {
   final String name;
   final Color color;
@@ -145,34 +139,29 @@ class Monogram extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bar = (size * 0.12).clamp(4.0, 7.0);
+    final ring = (size * 0.07).clamp(1.5, 4.0);
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: FanZoneColors.paper,
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: FanZoneColors.ink, width: 1.5),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Text(
-                initials(name),
-                style: fzDisplay(fontSize: size * 0.46, color: FanZoneColors.ink, letterSpacing: 0.5),
-              ),
-            ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      padding: EdgeInsets.all(ring * 1.4),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: FanZoneColors.cream, width: ring),
+        ),
+        child: Center(
+          child: Text(
+            initials(name),
+            style: fzDisplay(fontSize: size * 0.42, color: FanZoneColors.cream, letterSpacing: 0.2, height: 1),
           ),
-          Container(height: bar, color: color),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// Date comme sur un tableau d'affichage : jour en gros, mois dessous.
+/// Date en éphéméride : bandeau braise avec le jour de la semaine, gros chiffre.
 class DateBlock extends StatelessWidget {
   final String isoDate;
   final double size;
@@ -188,51 +177,74 @@ class DateBlock extends StatelessWidget {
     const days = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.'];
     return Container(
       width: size,
-      padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: FanZoneColors.ink,
-        borderRadius: BorderRadius.circular(3),
+        color: FanZoneColors.paper,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: FanZoneColors.wallDeep),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(d == null ? '' : days[d.weekday - 1], style: fz(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600)),
-          Text(d == null ? '?' : '${d.day}', style: fzDisplay(fontSize: size * 0.5, color: Colors.white, height: 1)),
-          Text(d == null ? '' : months[d.month - 1], style: fz(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600)),
+          Container(
+            width: double.infinity,
+            color: FanZoneColors.flare,
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              d == null ? '' : days[d.weekday - 1],
+              textAlign: TextAlign.center,
+              style: fz(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(d == null ? '?' : '${d.day}', style: fzDisplay(fontSize: size * 0.52, height: 1.05)),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 5),
+            child: Text(
+              d == null ? '' : months[d.month - 1],
+              style: fz(fontSize: 12, color: FanZoneColors.cement, fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Jauge de mobilisation : barre encadrée, remplissage gilet fluo.
+/// Jauge de mobilisation : piste sable, remplissage soleil.
 class Gauge extends StatelessWidget {
   final int value;
   final int capacity;
   final double height;
-  const Gauge({super.key, required this.value, required this.capacity, this.height = 12});
+  const Gauge({super.key, required this.value, required this.capacity, this.height = 10});
 
   @override
   Widget build(BuildContext context) {
     final pct = capacity == 0 ? 0.0 : (value / capacity).clamp(0.0, 1.0);
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        border: Border.all(color: FanZoneColors.ink, width: 1.5),
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: FractionallySizedBox(
-          widthFactor: pct,
-          child: Container(color: FanZoneColors.hiVis),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(height),
+      child: Container(
+        height: height,
+        color: FanZoneColors.wall,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: FractionallySizedBox(
+            widthFactor: pct == 0 ? 0.02 : pct,
+            child: Container(
+              decoration: BoxDecoration(
+                color: FanZoneColors.hiVis,
+                borderRadius: BorderRadius.circular(height),
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// Bouton plein largeur. `color` = fond (encre par défaut) ; `outlined` = cadre seul.
 class StickerButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
@@ -244,7 +256,7 @@ class StickerButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onTap,
-    this.color = FanZoneColors.ink,
+    this.color = FanZoneColors.flare,
     this.textColor = Colors.white,
     this.outlined = false,
     this.fontSize = 16,
@@ -253,22 +265,27 @@ class StickerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final disabled = onTap == null;
+    final bg = color == FanZoneColors.ink ? FanZoneColors.flare : color;
     return Opacity(
-      opacity: disabled ? 0.4 : 1,
+      opacity: disabled ? 0.45 : 1,
       child: Pressable(
         onTap: onTap,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 15),
           decoration: BoxDecoration(
-            color: outlined ? FanZoneColors.paper : color,
-            borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: outlined ? color : FanZoneColors.ink, width: 1.5),
+            color: outlined ? FanZoneColors.paper : bg,
+            borderRadius: BorderRadius.circular(999),
+            border: outlined ? Border.all(color: FanZoneColors.wallDeep, width: 1.5) : null,
           ),
           child: Center(
             child: Text(
               label,
-              style: fz(fontSize: fontSize, fontWeight: FontWeight.w600, color: outlined ? color : textColor),
+              style: fz(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w700,
+                color: outlined ? (color == FanZoneColors.ink ? FanZoneColors.ink : color) : textColor,
+              ),
             ),
           ),
         ),
@@ -277,7 +294,6 @@ class StickerButton extends StatelessWidget {
   }
 }
 
-/// Étiquette : trait fin, texte compact. `bg` fond optionnel.
 class StickerPill extends StatelessWidget {
   final String text;
   final Color color;
@@ -287,20 +303,17 @@ class StickerPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final filled = bg != null;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: bg ?? FanZoneColors.paper,
-        borderRadius: BorderRadius.circular(2),
-        border: Border.all(color: filled ? bg! : color, width: 1.5),
+        color: bg ?? color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(text, style: fz(fontSize: fontSize, fontWeight: FontWeight.w600, color: color)),
+      child: Text(text, style: fz(fontSize: fontSize, fontWeight: FontWeight.w700, color: color)),
     );
   }
 }
 
-/// Champ de saisie : trait d'encre, pas de fond.
 class StickerField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
@@ -324,52 +337,41 @@ class StickerField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         StickerLabel(label),
-        Container(
-          decoration: BoxDecoration(
-            color: FanZoneColors.paper,
-            borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: FanZoneColors.ink, width: 1.5),
-          ),
-          child: TextField(
-            controller: controller,
-            maxLines: maxLines,
-            keyboardType: keyboardType,
-            onChanged: onChanged,
-            style: fz(fontSize: 15, fontWeight: FontWeight.w500),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              hintText: hint,
-              hintStyle: fz(fontSize: 14, color: FanZoneColors.cement),
-            ),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
+          style: fz(fontSize: 15, fontWeight: FontWeight.w500),
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            hintText: hint,
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
       ],
     );
   }
 }
 
-/// Toast : bandeau noir, texte blanc.
 void showFanToast(BuildContext context, String text) {
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (messenger == null) return;
   messenger.hideCurrentSnackBar();
   messenger.showSnackBar(
     SnackBar(
-      content: Text(text, style: fz(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+      content: Text(text, style: fz(fontSize: 15, fontWeight: FontWeight.w600, color: FanZoneColors.cream)),
       duration: const Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: FanZoneColors.ink,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(3))),
-      margin: const EdgeInsets.all(16),
+      backgroundColor: FanZoneColors.night,
+      shape: const StadiumBorder(),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
     ),
   );
 }
 
-/// État vide : une phrase qui dit quoi faire.
 class EmptyHint extends StatelessWidget {
-  final String emoji; // conservé pour compatibilité, non affiché
+  final String emoji;
   final String text;
   const EmptyHint({super.key, this.emoji = '', required this.text});
 
@@ -377,12 +379,12 @@ class EmptyHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: FanZoneColors.wall,
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Text(text, style: fz(fontSize: 14, color: FanZoneColors.cement, height: 1.4)),
+      child: Text(text, style: fz(fontSize: 15, color: FanZoneColors.cement, height: 1.45)),
     );
   }
 }

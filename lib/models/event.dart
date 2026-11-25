@@ -133,10 +133,10 @@ class FanZoneEvent {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final diff = eventDate.difference(today).inDays;
-      if (diff < 0) return 'Passé';
-      if (diff == 0) return "Aujourd'hui !";
-      if (diff == 1) return 'Demain !';
-      return 'J-$diff';
+      if (diff < 0) return 'passé';
+      if (diff == 0) return "aujourd'hui";
+      if (diff == 1) return 'demain';
+      return 'dans $diff jours';
     } catch (_) {
       return '';
     }

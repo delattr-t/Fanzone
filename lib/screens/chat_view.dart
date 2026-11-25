@@ -127,7 +127,7 @@ class _ChatViewState extends State<ChatView> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: widget.accent,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: widget.accent, width: 1.5),
                       ),
                       child: Text(
@@ -155,7 +155,7 @@ class _ChatViewState extends State<ChatView> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: FanZoneColors.background,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: FanZoneColors.dark, width: 1.5),
                       ),
                       child: TextField(
@@ -224,7 +224,7 @@ class _DayChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         decoration: BoxDecoration(
           color: FanZoneColors.cream,
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Text(label, style: fz(fontSize: 11, fontWeight: FontWeight.w600, color: FanZoneColors.textSecondary)),
       ),
@@ -251,8 +251,8 @@ class _Bubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: mine ? accent : FanZoneColors.surface,
           borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(3),
-            topRight: const Radius.circular(3),
+            topLeft: const Radius.circular(14),
+            topRight: const Radius.circular(14),
             bottomLeft: Radius.circular(mine ? 14 : 4),
             bottomRight: Radius.circular(mine ? 4 : 14),
           ),

@@ -80,7 +80,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
     final today = DateTime.now();
 
     return Scaffold(
-      backgroundColor: FanZoneColors.paper,
+      backgroundColor: FanZoneColors.wool,
       body: ListView(
         padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 16, 16, 100),
         children: [
@@ -102,7 +102,7 @@ class _AgendaScreenState extends State<AgendaScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Container(height: 1.5, color: FanZoneColors.ink),
+          Container(height: 1, color: FanZoneColors.wallDeep),
           const SizedBox(height: 8),
           Row(
             children: _days
@@ -135,8 +135,8 @@ class _AgendaScreenState extends State<AgendaScreen> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: hasEv ? FanZoneColors.ink : (isToday ? FanZoneColors.hiVis : Colors.transparent),
-                    borderRadius: BorderRadius.circular(3),
-                    border: isToday && !hasEv ? Border.all(color: FanZoneColors.ink, width: 1.5) : null,
+                    borderRadius: BorderRadius.circular(14),
+                    border: isToday && !hasEv ? Border.all(color: FanZoneColors.wallDeep, width: 1.5) : null,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -215,8 +215,8 @@ class _NavBtn extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: FanZoneColors.ink, width: 1.5),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
         ),
         child: Icon(icon, size: 22, color: FanZoneColors.ink),
       ),

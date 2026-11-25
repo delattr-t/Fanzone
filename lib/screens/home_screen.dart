@@ -4,6 +4,7 @@ import '../models/event.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/event_card.dart';
+import '../widgets/scarf.dart';
 import '../widgets/sticker.dart';
 import 'alerts_screen.dart';
 import 'clubs_screen.dart';
@@ -77,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final listed = isFiltering ? filtered : filtered.where((e) => !followedUpcoming.contains(e)).toList();
 
     return Scaffold(
-      backgroundColor: FanZoneColors.paper,
+      backgroundColor: FanZoneColors.wool,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -88,7 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
               onPublish: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateEventScreen())),
             ),
           ),
-
           if (poster != null && !isFiltering)
             SliverToBoxAdapter(
               child: _Poster(
@@ -98,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 onJoin: () => widget.onToggleJoin(poster.id),
               ),
             ),
-
           SliverToBoxAdapter(
             child: _SearchBar(controller: _searchController, onChanged: (v) => setState(() => _query = v)),
           ),
@@ -111,25 +110,32 @@ class _HomeScreenState extends State<HomeScreen> {
               onFree: () => setState(() => _freeOnly = !_freeOnly),
             ),
           ),
-
           if (!isFiltering) ...[
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 22, 16, 10),
+                padding: const EdgeInsets.fromLTRB(16, 28, 16, 4),
                 child: SectionTitle(
-                  'Les clubs du coin',
+                  'Les écharpes du coin',
                   trailing: 'Tous les clubs',
                   onTrailing: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ClubsScreen())),
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: _ClubsStrip()),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: Text(
+                  'Touche une écharpe pour suivre le club et être prévenu de ses matchs.',
+                  style: fz(fontSize: 14, color: FanZoneColors.cement),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: _ScarfRack()),
           ],
-
           if (followedUpcoming.isNotEmpty && !isFiltering) ...[
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 22, 16, 12),
+                padding: EdgeInsets.fromLTRB(16, 28, 16, 14),
                 child: SectionTitle('Tes clubs jouent'),
               ),
             ),
@@ -144,10 +150,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 22, 16, 12),
+              padding: const EdgeInsets.fromLTRB(16, 28, 16, 14),
               child: SectionTitle(
                 isFiltering
                     ? '${filtered.length} résultat${filtered.length > 1 ? 's' : ''}'
@@ -181,7 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ── En-tête : nom de l'app en lettres d'affiche + cloche ────────
 class _Masthead extends StatelessWidget {
   final String userName;
   final int unread;
@@ -194,54 +198,56 @@ class _Masthead extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('FanZone', style: fzDisplay(fontSize: 38, fontWeight: FontWeight.w800, letterSpacing: -1)),
-                  Text('Salut $userName. On fait du bruit où, ce week-end\u00A0?',
-                      style: fz(fontSize: 14, color: FanZoneColors.cement)),
+                  Text('Salut $userName,', style: fzDisplay(fontSize: 34)),
+                  const SizedBox(height: 2),
+                  Text('on fait du bruit où, ce week-end ?',
+                      style: fz(fontSize: 15, color: FanZoneColors.cement)),
                 ],
               ),
             ),
-            Pressable(
-              onTap: onPublish,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: FanZoneColors.flare,
-                  borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: FanZoneColors.ink, width: 1.5),
-                ),
-                child: const Icon(Icons.add, size: 22, color: Colors.white),
+            const SizedBox(width: 10),
+            _RoundButton(
+              onTap: onBell,
+              color: FanZoneColors.paper,
+              tooltip: 'Alertes',
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(Icons.notifications_none_rounded, size: 24, color: FanZoneColors.ink),
+                  if (unread > 0)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        constraints: const BoxConstraints(minWidth: 18),
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: FanZoneColors.flare,
+                          borderRadius: BorderRadius.circular(99),
+                          border: Border.all(color: FanZoneColors.paper, width: 2),
+                        ),
+                        child: Text('$unread',
+                            textAlign: TextAlign.center,
+                            style: fz(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white)),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(width: 8),
-            Pressable(
-              onTap: onBell,
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  color: unread > 0 ? FanZoneColors.hiVis : FanZoneColors.paper,
-                  borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: FanZoneColors.ink, width: 1.5),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.notifications_none, size: 20),
-                    if (unread > 0) ...[
-                      const SizedBox(width: 4),
-                      Text('$unread', style: fzDisplay(fontSize: 18)),
-                    ],
-                  ],
-                ),
-              ),
+            _RoundButton(
+              onTap: onPublish,
+              color: FanZoneColors.flare,
+              tooltip: 'Publier un match',
+              child: const Icon(Icons.add_rounded, size: 26, color: Colors.white),
             ),
           ],
         ),
@@ -250,7 +256,32 @@ class _Masthead extends StatelessWidget {
   }
 }
 
-// ── L'affiche : le prochain match (le tien, sinon le plus proche) ──
+class _RoundButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final Color color;
+  final Widget child;
+  final String tooltip;
+  const _RoundButton({required this.onTap, required this.color, required this.child, required this.tooltip});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Pressable(
+        onTap: onTap,
+        child: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle, boxShadow: FanZoneColors.lift),
+          child: Center(child: child),
+        ),
+      ),
+    );
+  }
+}
+
+/// Le prochain match, façon soir de match : fond brun nuit, écharpe du club
+/// tendue en haut, comme accrochée à la rambarde.
 class _Poster extends StatelessWidget {
   final FanZoneEvent event;
   final bool mine;
@@ -267,57 +298,66 @@ class _Poster extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+        margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
         decoration: BoxDecoration(
-          color: FanZoneColors.ink,
-          borderRadius: BorderRadius.circular(3),
+          color: FanZoneColors.night,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: FanZoneColors.lift,
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(height: 8, color: e.color),
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+              padding: const EdgeInsets.fromLTRB(6, 22, 6, 0),
+              child: Scarf.club(e.color, label: e.club, height: 46),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     mine ? 'Ton prochain match' : 'Le prochain match près de chez toi',
-                    style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.hiVis),
+                    style: fz(fontSize: 14, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis),
                   ),
-                  const SizedBox(height: 10),
-                  Text(home, style: fzDisplay(fontSize: 40, color: Colors.white, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  Text(home, style: fzDisplay(fontSize: 38, color: FanZoneColors.cream, height: 1.05)),
                   if (away != null)
-                    Text('contre $away', style: fzDisplay(fontSize: 28, color: Colors.white, fontWeight: FontWeight.w500)),
+                    Text('contre $away',
+                        style: fzDisplay(fontSize: 26, color: FanZoneColors.cream.withValues(alpha: 0.75), fontWeight: FontWeight.w600)),
                   const SizedBox(height: 14),
-                  Text(
-                    '${_longDate(e.date)}, ${_hour(e.time)}',
-                    style: fz(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
-                  Text(e.venue, style: fz(fontSize: 15, color: Colors.white70)),
-                  const SizedBox(height: 16),
                   Row(
                     children: [
+                      const Icon(Icons.event_rounded, size: 18, color: FanZoneColors.hiVis),
+                      const SizedBox(width: 8),
+                      Text('${_longDate(e.date)}, ${_hour(e.time)}',
+                          style: fz(fontSize: 15, fontWeight: FontWeight.w600, color: FanZoneColors.cream)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.place_rounded, size: 18, color: FanZoneColors.hiVis),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(e.venue,
+                            style: fz(fontSize: 15, color: FanZoneColors.cream.withValues(alpha: 0.8))),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      CrowdDots(count: e.supporters, accent: e.color, size: 26, ring: FanZoneColors.night),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          '${e.supporters} supporter${e.supporters > 1 ? 's' : ''} annoncé${e.supporters > 1 ? 's' : ''}',
-                          style: fz(fontSize: 14, color: Colors.white70),
+                          '${e.supporters} supporter${e.supporters > 1 ? 's' : ''}\nannoncé${e.supporters > 1 ? 's' : ''}',
+                          style: fz(fontSize: 13, height: 1.25, color: FanZoneColors.cream.withValues(alpha: 0.8)),
                         ),
                       ),
-                      Pressable(
-                        onTap: onJoin,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: mine ? FanZoneColors.hiVis : FanZoneColors.flare,
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: Text(
-                            mine ? 'J\'y suis' : 'J\'y vais',
-                            style: fz(fontSize: 15, fontWeight: FontWeight.w600, color: mine ? FanZoneColors.ink : Colors.white),
-                          ),
-                        ),
-                      ),
+                      JoinPill(joined: mine, onTap: onJoin, onDark: true),
                     ],
                   ),
                 ],
@@ -347,7 +387,6 @@ class _Poster extends StatelessWidget {
   }
 }
 
-// ── Recherche ───────────────────────────────────────────────────
 class _SearchBar extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -356,27 +395,33 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: FanZoneColors.ink, width: 1.5),
-          borderRadius: BorderRadius.circular(3),
+          color: FanZoneColors.paper,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: FanZoneColors.lift,
         ),
         child: TextField(
           controller: controller,
           onChanged: onChanged,
           style: fz(fontSize: 15),
           decoration: InputDecoration(
+            filled: false,
             border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            prefixIcon: const Icon(Icons.search, size: 20, color: FanZoneColors.ink),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            prefixIcon: const Padding(
+              padding: EdgeInsets.only(left: 6),
+              child: Icon(Icons.search_rounded, size: 22, color: FanZoneColors.cement),
+            ),
             hintText: 'Un club, un lieu, une ville',
-            hintStyle: fz(fontSize: 15, color: FanZoneColors.cement),
             suffixIcon: controller.text.isEmpty
                 ? null
                 : IconButton(
-                    icon: const Icon(Icons.close, size: 18),
+                    icon: const Icon(Icons.close_rounded, size: 20),
                     onPressed: () {
                       controller.clear();
                       onChanged('');
@@ -400,10 +445,10 @@ class _Filters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 46,
+      height: 54,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         children: [
           ...sports.map((s) => _Chip(label: s, active: active == s, onTap: () => onSport(s))),
           _Chip(label: 'Entrée libre', active: freeOnly, onTap: onFree),
@@ -423,77 +468,94 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active ? FanZoneColors.ink : FanZoneColors.paper,
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(color: FanZoneColors.ink, width: 1.5),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: active ? FanZoneColors.ink : FanZoneColors.wallDeep),
         ),
         child: Text(
           label,
-          style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: active ? Colors.white : FanZoneColors.ink),
+          style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: active ? FanZoneColors.cream : FanZoneColors.ink),
         ),
       ),
     );
   }
 }
 
-// ── Clubs : monogrammes ─────────────────────────────────────────
-class _ClubsStrip extends StatelessWidget {
-  const _ClubsStrip();
+/// Le porte-écharpes : une écharpe par club. Toucher l'écharpe pour suivre le
+/// club, toucher la ligne du dessous pour ouvrir sa fiche.
+class _ScarfRack extends StatelessWidget {
+  const _ScarfRack();
 
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     return SizedBox(
-      height: 92,
+      height: 118,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         itemCount: state.clubs.length,
         itemBuilder: (_, i) {
           final c = state.clubs[i];
           final following = state.isFollowing(c.id);
-          return Pressable(
-            behavior: HitTestBehavior.deferToChild,
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id))),
-            child: Container(
-              width: 84,
-              margin: const EdgeInsets.only(right: 10),
-              child: Column(
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
+          return Container(
+            width: 232,
+            margin: const EdgeInsets.only(right: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Pressable(
+                  onTap: () => state.toggleFollowClub(c.id),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: following ? 1 : 0.92,
+                      child: Scarf.club(c.color, label: c.name, height: 44),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
+                  child: Row(
                     children: [
-                      Monogram(name: c.name, color: c.color, size: 52),
-                      if (following)
-                        Positioned(
-                          right: -5,
-                          top: -5,
-                          child: Container(
-                            width: 18,
-                            height: 18,
-                            decoration: BoxDecoration(
-                              color: FanZoneColors.hiVis,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: FanZoneColors.ink, width: 1.5),
-                            ),
-                            child: const Icon(Icons.check, size: 11, color: FanZoneColors.ink),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.push(
+                              context, MaterialPageRoute(builder: (_) => ClubDetailScreen(clubId: c.id))),
+                          child: Text(
+                            '${c.sport}, ${state.followersOf(c)} fans',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: fz(fontSize: 13, color: FanZoneColors.cement),
                           ),
                         ),
+                      ),
+                      Pressable(
+                        onTap: () => state.toggleFollowClub(c.id),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: following ? FanZoneColors.hiVis : FanZoneColors.paper,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: following ? FanZoneColors.hiVis : FanZoneColors.wallDeep),
+                          ),
+                          child: Text(
+                            following ? 'Suivi' : 'Suivre',
+                            style: fz(fontSize: 13, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    c.shortName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: fz(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -501,4 +563,3 @@ class _ClubsStrip extends StatelessWidget {
     );
   }
 }
-

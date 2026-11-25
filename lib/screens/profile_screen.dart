@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
 import '../theme/app_theme.dart';
+import '../widgets/scarf.dart';
 import '../widgets/sticker.dart';
 import '../models/collectif.dart';
 import '../state/app_state.dart';
@@ -135,7 +136,7 @@ class ProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: c.bgColor,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(color: c.color, width: 1.5),
                       ),
                       child: Text(c.name, style: fz(fontSize: 13, fontWeight: FontWeight.w600, color: c.color)),
@@ -155,7 +156,7 @@ class ProfileScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: FanZoneColors.surface,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: FanZoneColors.border, width: 1.5),
                   ),
                   child: Center(
@@ -178,7 +179,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: FanZoneColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
         ),
         title: Text('Repartir de zéro?', style: fzDisplay(fontSize: 21)),
@@ -211,7 +212,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (_) => AlertDialog(
         backgroundColor: FanZoneColors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
         ),
         title: Text(
@@ -230,11 +231,11 @@ class ProfileScreen extends StatelessWidget {
             filled: true,
             fillColor: FanZoneColors.cream,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: FanZoneColors.dark, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(14),
               borderSide: const BorderSide(color: FanZoneColors.primary, width: 1.5),
             ),
           ),
@@ -267,40 +268,62 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    final segments = <ScarfSegment>[
+      ...state.clubs.where((c) => state.isFollowing(c.id)).map((c) => ScarfSegment(c.color, c.shortName)),
+      ...state.collectifs.where((c) => c.joined).map((c) => ScarfSegment(c.color, c.name)),
+    ];
     return Container(
-      color: FanZoneColors.ink,
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 22, 20, 24),
+      decoration: const BoxDecoration(
+        color: FanZoneColors.night,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(32)),
+      ),
+      padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 22, 0, 26),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(height: 6, width: 56, color: FanZoneColors.flare),
-          const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text(
-                  userName,
-                  style: fzDisplay(fontSize: 44, color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: -1),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: onEditName,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
                   child: Text(
-                    'Modifier',
-                    style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: FanZoneColors.hiVis, decoration: TextDecoration.underline),
+                    userName,
+                    style: fzDisplay(fontSize: 46, color: FanZoneColors.cream),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Pressable(
+                  onTap: onEditName,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: FanZoneColors.cream.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text('Modifier', style: fz(fontSize: 14, fontWeight: FontWeight.w700, color: FanZoneColors.cream)),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 4),
-          Text('Supporter de sport local', style: fz(fontSize: 14, color: Colors.white70)),
+          const SizedBox(height: 22),
+          Scarf(
+            segments: segments.isEmpty ? const [ScarfSegment(FanZoneColors.flare, 'À tricoter')] : segments,
+            height: 48,
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Text(
+              segments.isEmpty
+                  ? 'Ton écharpe se tricote avec les clubs que tu suis et les collectifs que tu rejoins.'
+                  : 'Ton écharpe : ${segments.length} couleur${segments.length > 1 ? 's' : ''}, une par club suivi et par collectif rejoint.',
+              style: fz(fontSize: 14, color: FanZoneColors.cream.withValues(alpha: 0.72), height: 1.4),
+            ),
+          ),
         ],
       ),
     );
@@ -325,7 +348,7 @@ class _StatsRow extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       decoration: BoxDecoration(
         color: FanZoneColors.surface,
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: FanZoneColors.dark, width: 1.5)
       ),
       child: Row(
@@ -398,7 +421,7 @@ class _EventMiniCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 10),
         decoration: BoxDecoration(
           color: FanZoneColors.surface,
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: event.color, width: 1.5)
         ),
         child: Column(
@@ -408,7 +431,7 @@ class _EventMiniCard extends StatelessWidget {
               height: 5,
               decoration: BoxDecoration(
                 color: event.color,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
               ),
             ),
             Expanded(
@@ -454,7 +477,7 @@ class _EventMiniCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 5),
                         decoration: BoxDecoration(
                           color: FanZoneColors.errorBg,
-                          borderRadius: BorderRadius.circular(3),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: FanZoneColors.error, width: 1.5),
                         ),
                         child: Center(
@@ -490,7 +513,7 @@ class _CollectifChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: col.bgColor,
-        borderRadius: BorderRadius.circular(3),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: col.color, width: 1.5)
       ),
       child: Row(
@@ -552,7 +575,7 @@ class _EmptyHint extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: FanZoneColors.cream,
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: FanZoneColors.border, width: 1.5),
         ),
         child: Text(

@@ -168,11 +168,11 @@ class _FanZoneBottomNav extends StatelessWidget {
   const _FanZoneBottomNav({required this.currentIndex, required this.onTap});
 
   static const _items = [
-    (Icons.home_outlined, Icons.home, 'Accueil'),
-    (Icons.map_outlined, Icons.map, 'Carte'),
-    (Icons.calendar_today_outlined, Icons.calendar_today, 'Agenda'),
-    (Icons.groups_outlined, Icons.groups, 'Collectifs'),
-    (Icons.person_outline, Icons.person, 'Profil'),
+    (Icons.home_outlined, Icons.home_rounded, 'Accueil'),
+    (Icons.map_outlined, Icons.map_rounded, 'Carte'),
+    (Icons.calendar_month_outlined, Icons.calendar_month_rounded, 'Agenda'),
+    (Icons.groups_outlined, Icons.groups_rounded, 'Collectifs'),
+    (Icons.person_outline_rounded, Icons.person_rounded, 'Profil'),
   ];
 
   @override
@@ -180,12 +180,13 @@ class _FanZoneBottomNav extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: FanZoneColors.paper,
-        border: Border(top: BorderSide(color: FanZoneColors.ink, width: 2)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [BoxShadow(color: Color(0x1A5A3418), blurRadius: 20, offset: Offset(0, -4))],
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 68,
           child: Row(
             children: List.generate(_items.length, (i) {
               final item = _items[i];
@@ -197,17 +198,26 @@ class _FanZoneBottomNav extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(active ? item.$2 : item.$1, size: 22, color: FanZoneColors.ink),
-                      const SizedBox(height: 3),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOutCubic,
+                        width: active ? 54 : 40,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: active ? FanZoneColors.hiVis : Colors.transparent,
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Icon(active ? item.$2 : item.$1, size: 22,
+                            color: active ? FanZoneColors.ink : FanZoneColors.cement),
+                      ),
+                      const SizedBox(height: 4),
                       Text(
                         item.$3,
-                        style: fzDisplay(fontSize: 14, fontWeight: active ? FontWeight.w700 : FontWeight.w500),
-                      ),
-                      const SizedBox(height: 3),
-                      Container(
-                        width: 26,
-                        height: 3,
-                        color: active ? FanZoneColors.hiVis : Colors.transparent,
+                        style: fz(
+                          fontSize: 12,
+                          fontWeight: active ? FontWeight.w800 : FontWeight.w500,
+                          color: active ? FanZoneColors.ink : FanZoneColors.cement,
+                        ),
                       ),
                     ],
                   ),

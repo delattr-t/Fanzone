@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/collectif.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/event_card.dart';
+import '../widgets/scarf.dart';
 import '../widgets/sticker.dart';
 import 'collectif_detail_screen.dart';
 
@@ -27,7 +29,7 @@ class CollectifsScreen extends StatelessWidget {
     final others = collectifs.where((c) => !c.joined).toList();
 
     return Scaffold(
-      backgroundColor: FanZoneColors.paper,
+      backgroundColor: FanZoneColors.wool,
       appBar: AppBar(title: const Text('Collectifs'), automaticallyImplyLeading: false),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
@@ -77,52 +79,72 @@ class _CollectifCard extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       child: StickerBlock(
-        margin: const EdgeInsets.only(bottom: 12),
-        stripe: col.color,
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: EdgeInsets.zero,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Monogram(name: col.name, color: col.color, size: 44),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 16, 4, 0),
+              child: Scarf.club(col.color, label: col.name, height: 44),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(col.name, style: fzDisplay(fontSize: 24)),
-                      const SizedBox(height: 2),
-                      Text(col.club, style: fz(fontSize: 13, color: FanZoneColors.cement)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(col.name, style: fzDisplay(fontSize: 26)),
+                            Text(col.club, style: fz(fontSize: 14, color: FanZoneColors.cement)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Pressable(
+                        onTap: onToggle,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: col.joined ? FanZoneColors.hiVis : FanZoneColors.flare,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            col.joined ? 'Membre' : 'Rejoindre',
+                            style: fz(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: col.joined ? FanZoneColors.ink : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Pressable(
-                  onTap: onToggle,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: col.joined ? FanZoneColors.hiVis : FanZoneColors.ink,
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border.all(color: FanZoneColors.ink, width: 1.5),
-                    ),
-                    child: Text(
-                      col.joined ? 'Membre' : 'Rejoindre',
-                      style: fz(fontSize: 14, fontWeight: FontWeight.w600, color: col.joined ? FanZoneColors.ink : Colors.white),
-                    ),
+                  const SizedBox(height: 10),
+                  Text(col.description, style: fz(fontSize: 15, height: 1.45)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      CrowdDots(count: col.members, accent: col.color),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${col.members} membre${col.members > 1 ? 's' : ''}, $chantCount chant${chantCount > 1 ? 's' : ''}'
+                          '${role != null ? '. Ton rôle : ${roleById(role!).label.toLowerCase()}' : ''}',
+                          style: fz(fontSize: 13, color: FanZoneColors.cement),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(col.description, style: fz(fontSize: 14, height: 1.4)),
-            const SizedBox(height: 8),
-            Text(
-              '${col.members} membre${col.members > 1 ? 's' : ''}, $chantCount chant${chantCount > 1 ? 's' : ''}'
-              '${role != null ? '. Ton rôle : ${roleById(role!).label.toLowerCase()}' : ''}',
-              style: fz(fontSize: 13, color: FanZoneColors.cement),
+                ],
+              ),
             ),
           ],
         ),

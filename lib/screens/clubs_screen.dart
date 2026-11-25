@@ -63,7 +63,7 @@ class _ClubCard extends StatelessWidget {
               width: 52, height: 52,
               decoration: BoxDecoration(
                 color: club.bgColor,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: club.color, width: 1.5),
               ),
               child: Center(child: Monogram(name: club.name, color: club.color, size: 44)),
@@ -116,7 +116,7 @@ class _FollowButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16, vertical: 8),
         decoration: BoxDecoration(
           color: following ? club.bgColor : club.color,
-          borderRadius: BorderRadius.circular(3),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: club.color, width: 1.5)
         ),
         child: Text(

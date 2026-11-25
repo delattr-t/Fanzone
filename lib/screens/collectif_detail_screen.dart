@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/scarf.dart';
 import '../widgets/sticker.dart';
 import 'chants_view.dart';
 import 'chat_view.dart';
@@ -54,13 +55,17 @@ class _CollectifDetailScreenState extends State<CollectifDetailScreen> with Sing
         state.upcomingEvents.where((e) => e.clubId == col.clubId || e.collectifIds.contains(col.id)).toList();
 
     return Scaffold(
-      backgroundColor: FanZoneColors.paper,
+      backgroundColor: FanZoneColors.wool,
       appBar: AppBar(
         title: Text(col.name),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(124),
+          preferredSize: const Size.fromHeight(178),
           child: Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 14),
+                child: Scarf.club(col.color, label: col.name, height: 40),
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: Row(
@@ -85,9 +90,9 @@ class _CollectifDetailScreenState extends State<CollectifDetailScreen> with Sing
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: col.joined ? FanZoneColors.hiVis : FanZoneColors.ink,
-                          borderRadius: BorderRadius.circular(3),
-                          border: Border.all(color: FanZoneColors.ink, width: 1.5),
+                          color: col.joined ? FanZoneColors.hiVis : FanZoneColors.flare,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
                         ),
                         child: Text(
                           col.joined ? 'Membre' : 'Rejoindre',
@@ -104,7 +109,7 @@ class _CollectifDetailScreenState extends State<CollectifDetailScreen> with Sing
               ),
               Container(
                 decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: FanZoneColors.ink, width: 1.5)),
+                  border: Border(top: BorderSide(color: FanZoneColors.wallDeep, width: 1.5)),
                 ),
                 child: TabBar(
                   controller: _tabs,
