@@ -25,8 +25,7 @@ class ChantsView extends StatelessWidget {
  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
  decoration: const BoxDecoration(
  color: FanZoneColors.background,
- borderRadius: BorderRadius.vertical(top: Radius.circular(3)),
- border: Border(top: BorderSide(color: FanZoneColors.dark, width: 1.5)),
+ borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
  ),
  child: SingleChildScrollView(
  child: Column(
@@ -78,8 +77,8 @@ class ChantsView extends StatelessWidget {
               backgroundColor: col.color,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(3),
-                side: const BorderSide(color: FanZoneColors.dark, width: 1.5),
+                borderRadius: BorderRadius.circular(14),
+                side: const BorderSide(color: FanZoneColors.wallDeep, width: 1.5),
               ),
               label: Text('Proposer un chant', style: fz(fontWeight: FontWeight.w700)),
               icon: const Text('', style: TextStyle(fontSize: 18)),
@@ -147,8 +146,8 @@ class _Podium extends StatelessWidget {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: i == 0 ? color : color.withValues(alpha: 0.5 - i * 0.12),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
-                      border: Border.all(color: FanZoneColors.dark, width: 1.5)
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                      border: Border.all(color: FanZoneColors.wallDeep, width: 1.5)
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -196,7 +195,7 @@ class _ChantCardState extends State<_ChantCard> {
     final c = widget.chant;
     return StickerBlock(
       margin: const EdgeInsets.only(bottom: 10),
-      borderColor: widget.voted ? widget.color : FanZoneColors.dark,
+      borderColor: widget.voted ? widget.color : null,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +207,7 @@ class _ChantCardState extends State<_ChantCard> {
                 decoration: BoxDecoration(
                   color: widget.rank <= 3 ? FanZoneColors.yellow : FanZoneColors.cream,
                   shape: BoxShape.circle,
-                  border: Border.all(color: FanZoneColors.dark, width: 1.5),
+                  border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
                 ),
                 child: Center(child: Text('${widget.rank}', style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: FanZoneColors.dark))),
               ),
@@ -233,8 +232,8 @@ class _ChantCardState extends State<_ChantCard> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: widget.voted ? widget.color : FanZoneColors.surface,
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(color: widget.voted ? widget.color : FanZoneColors.dark, width: 1.5),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: widget.voted ? widget.color : FanZoneColors.wallDeep, width: 1.5),
                   ),
                   child: Text(
                     '${c.votes}',
@@ -251,8 +250,7 @@ class _ChantCardState extends State<_ChantCard> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: FanZoneColors.cream,
-                borderRadius: BorderRadius.circular(3),
-                border: Border(left: BorderSide(color: widget.color, width: 1.5)),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

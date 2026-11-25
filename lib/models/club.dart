@@ -36,7 +36,7 @@ const sampleClubs = [
     followersBase: 128, homeVenue: 'Terrain Émile Anthoine',
   ),
   Club(
-    id: 'c2', name: 'BC Saint-Denis', shortName: 'BC SDenis', emoji: '🏀', sport: 'Basketball',
+    id: 'c2', name: 'BC Saint-Denis', shortName: 'Saint-Denis', emoji: '🏀', sport: 'Basketball',
     city: 'Saint-Denis 93', color: Color(0xFFF0471F), bgColor: Color(0xFFFCE9E3),
     description: "Le basket dionysien de U9 à seniors. Les U21 visent le titre IDF cette saison.",
     followersBase: 96, homeVenue: 'Gymnase Géo-André',
@@ -60,7 +60,7 @@ const sampleClubs = [
     followersBase: 210, homeVenue: 'Place de la Mairie',
   ),
   Club(
-    id: 'c6', name: 'Velo Club Vincennes', shortName: 'VéloVinc', emoji: '🚴', sport: 'Cyclisme',
+    id: 'c6', name: 'Velo Club Vincennes', shortName: 'Vélo Vincennes', emoji: '🚴', sport: 'Cyclisme',
     city: 'Vincennes 94', color: Color(0xFFB8520A), bgColor: Color(0xFFFBEEE0),
     description: "Club cycliste amateur, critériums dans le Bois de Vincennes et sorties du dimanche.",
     followersBase: 63, homeVenue: 'Bois de Vincennes',

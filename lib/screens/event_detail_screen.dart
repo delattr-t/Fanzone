@@ -4,6 +4,7 @@ import '../models/event.dart';
 import '../models/sound_gear.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
+import '../widgets/scarf.dart';
 import '../widgets/sticker.dart';
 import 'chat_view.dart';
 import 'clubs_screen.dart';
@@ -69,8 +70,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: Container(height: 4, color: ev.color),
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 12),
+            child: Scarf.club(ev.color, label: ev.club, height: 40),
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -101,13 +105,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const StickerLabel('Pourquoi venir?'),
+                  const StickerLabel('Pourquoi venir\u00A0?'),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: FanZoneColors.cream,
-                      borderRadius: BorderRadius.circular(3),
-                      border: Border(left: BorderSide(color: ev.color, width: 1.5)),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
                       '"${ev.description}"',
@@ -195,7 +198,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
                               color: c.joined ? c.bgColor : FanZoneColors.cream,
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(14),
                               border: Border.all(color: c.joined ? c.color : FanZoneColors.border, width: 1.5),
                             ),
                             child: Row(
@@ -257,7 +260,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   ],
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: FanZoneColors.cream, borderRadius: BorderRadius.circular(3)),
+                    decoration: BoxDecoration(color: FanZoneColors.cream, borderRadius: BorderRadius.circular(14)),
                     child: Text('${soundNoteForVenueKind(ev.venueKind)}',
                         style: fz(fontSize: 11, fontWeight: FontWeight.w500, color: FanZoneColors.textSecondary, height: 1.4)),
                   ),
@@ -318,8 +321,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
             // ── CTA ──
             StickerButton(
-              label: ev.joined ? 'Je viens! (quitter)' : 'Je viens soutenir ce club',
-              color: ev.joined ? FanZoneColors.success : FanZoneColors.dark,
+              label: ev.joined ? 'Tu y vas. Je ne peux plus venir' : 'J\'y vais, je viens soutenir',
+              color: ev.joined ? FanZoneColors.ink : FanZoneColors.flare,
               outlined: ev.joined,
               fontSize: 16,
               onTap: ev.isPast ? null : widget.onToggleJoin,

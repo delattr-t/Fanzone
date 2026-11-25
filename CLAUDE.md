@@ -16,7 +16,7 @@ de rejoindre des collectifs de supporters et de s'organiser (chat, chants, rôle
 | Couche | Technologie |
 |---|---|
 | Framework | Flutter (Dart ≥ 3.3) |
-| Fonts | Google Fonts — Barlow Condensed (titres) + Barlow (corps) |
+| Fonts | Google Fonts — Bricolage Grotesque |
 | Carte | flutter_map 7.0 + OpenStreetMap |
 | Géolocalisation | geolocator 13.0 |
 | Backend | **Supabase** (projet `fanzone`, région eu-west-3 Paris) : Postgres + Auth anonyme + Realtime. `AppConfig.useSupabase = false` pour revenir au mode 100 % local |
@@ -66,7 +66,8 @@ lib/
 │   ├── alerts_screen.dart           # Centre d'alertes in-app
 │   └── profile_screen.dart          # Profil, mes events/collectifs/clubs, reset
 ├── widgets/
-│   ├── event_card.dart              # Card event (Home, Agenda, Club)
+│   ├── event_card.dart              # Card event, JoinPill, CrowdDots
+│   ├── scarf.dart                   # Scarf : l'écharpe tricotée (geste signature)
 │   └── sticker.dart                 # StickerBlock/Label/Button/Pill/Field, EmptyHint, showFanToast
 └── theme/app_theme.dart             # FanZoneColors + AppTheme
 test/widget_test.dart                # 4 tests unitaires sur AppState via LocalRepository
@@ -74,26 +75,30 @@ test/widget_test.dart                # 4 tests unitaires sur AppState via LocalR
 
 ---
 
-## Design system — « Affiche de match » (v1.3)
+## Design system — « Écharpe » (v1.4)
 
-Direction : l'affiche de match collée sur le mur du gymnase. Papier blanc, encre noire, un seul
-accent (le fumigène), un jaune gilet-fluo réservé à la jauge de mobilisation. Pas d'ombres, pas
-d'emojis dans l'interface, pas de dégradés.
+Direction : la laine du supporter. Tout ce qui est chaleureux dans le sport amateur tient dans
+l'écharpe tricotée aux couleurs du club ; c'est le geste signature de l'app.
 
-- **Couleurs** (`FanZoneColors`) : `paper #FFFFFF` · `ink #000000` · `flare #F0471F` (seul accent,
-  CTA + alertes non lues) · `hiVis #E4FF2E` (jauge, soulignement de l'onglet actif, état « membre ») ·
-  `wall #E8E8E3` / `wallDeep #D6D6D0` (surfaces secondaires) · `cement #6B6B66` (texte secondaire).
-  Les alias historiques (`primary`, `dark`, `background`, `yellow`…) pointent vers ces valeurs.
-- **Typo** : Barlow Condensed pour l'affichage (`fzDisplay()`, w700/w800, lettrage serré) ;
-  Barlow pour le corps (`fz()`, w400–w600). Jamais de `TextStyle` Nunito ni de `GoogleFonts.*` direct.
-- **Formes** : rayon `3`, bordure `1.5px` encre, filet `3px` encre sous les titres de section
-  (`SectionTitle`), bande de couleur du club en haut des cartes (`StickerBlock(stripe:)`).
-- **Composants** (`lib/widgets/sticker.dart`) : `StickerBlock`, `SectionTitle`, `Monogram`
-  (initiales du club/collectif à la place des emojis), `DateBlock` (date façon tableau d'affichage),
-  `Gauge` (jauge de remplissage hi-vis), `StickerButton`, `StickerPill`, `StickerField`, `EmptyHint`.
-- **Ton des textes** : phrases complètes, minuscules, verbes concrets (« J'y vais », « Publier un
-  match », « Entrer dans la tribune »). Pas de « · » entre les métadonnées : des virgules.
-- Chaque club/collectif garde sa couleur (`color`) : elle sert à la bande des cartes et au monogramme.
+- **Geste signature** : `Scarf` (`lib/widgets/scarf.dart`) dessine une écharpe en code
+  (rayures crème, mailles jersey, lettrage jacquard, franges). Une écharpe par club sur l'accueil
+  (« Les écharpes du coin », toucher = suivre), en tête du prochain match, des collectifs, de la
+  fiche match, trois écharpes qui se déroulent à l'entrée, et « ton écharpe » sur le profil
+  (un tronçon par club suivi / collectif rejoint). Les cartes de match portent une lisière tricotée.
+- **Couleurs** (`FanZoneColors`) : `wool #F6EDE0` (fond) · `paper #FFFBF5` (cartes) · `ink #2B1A12`
+  (encre brune) · `flare #E2462B` (braise : action) · `hiVis #FFB420` (soleil : jauge, sélection,
+  « membre ») · `wall #EFE3D2` / `wallDeep #E3D3BD` (sable, filets) · `cement #7A6253` (texte
+  secondaire) · `night #2B1A12` (blocs soir de match) · `cream #FFF3E0` (rayures des écharpes).
+- **Typo** : Bricolage Grotesque partout (`fz()` corps, `fzDisplay()` titres w800 ; facteur 0.86
+  dans `fzDisplay` car les tailles ont été calibrées pour un condensé).
+- **Formes** : cartes rayon 20–28, boutons en pilule, ombre douce `FanZoneColors.lift`, pas de
+  contour noir. Écussons ronds (`Monogram`), éphémérides (`DateBlock`), foule de têtes
+  (`CrowdDots`), bouton `JoinPill` (braise → soleil une fois engagé).
+- **Carte** : tuiles OpenStreetMap (sans clé) teintées « laine » par `ColorFiltered` ; épingles =
+  écusson du club + nombre de supporters ; carrousel synchronisé en bas. Attribution OSM affichée.
+- **Ton des textes** : phrases complètes, minuscules, verbes concrets. Virgules, pas de « · ».
+- Une `Border` non uniforme (ex. seulement `left`) ne doit jamais être combinée à un `borderRadius`
+  (erreur de rendu Flutter).
 
 ---
 
@@ -158,6 +163,8 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - `f10fdc5` écran Profil
 - `5d34a7c` intégration Firebase (non finalisée, retirée ensuite)
 - `0cc1bfa` CLAUDE.md
+- **v1.4 (25 nov. 2026)** — design « Écharpe » (chaleureux) ; carte réparée (CARTO exigeait une clé → OSM).
+- **v1.3 (24 nov. 2026)** — design « Affiche de match » (remplacé par la v1.4).
 - **v1.2 (24 nov. 2026)** — backend Supabase : `FanZoneRepository` (local / Supabase), auth anonyme,
   schéma + RLS + seed, chat temps réel, écriture optimiste avec rattrapage, 4 tests.
 - **v1.1 (nov. 2026)** — refonte sans backend : AppState + persistance locale, suppression Firebase,

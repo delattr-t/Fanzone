@@ -60,8 +60,8 @@ class RolesView extends StatelessWidget {
                       height: 46,
                       decoration: BoxDecoration(
                         color: isMine ? FanZoneColors.ink : FanZoneColors.wall,
-                        borderRadius: BorderRadius.circular(3),
-                        border: Border.all(color: FanZoneColors.ink, width: 1.5),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: FanZoneColors.wallDeep, width: 1.5),
                       ),
                       child: Center(
                         child: Text(

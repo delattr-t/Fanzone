@@ -58,7 +58,7 @@ lib/
 
 Voir `CLAUDE.md` pour l'architecture détaillée, l'historique et le backlog.
 
-## Charte « Affiche de match »
+## Charte « Écharpe »
 
-Papier `#FFFFFF`, encre `#000000`, fumigène `#F0471F` (seul accent), gilet fluo `#E4FF2E` (jauge de mobilisation), béton `#E8E8E3`.
-Barlow Condensed pour les titres, Barlow pour le texte. Pas d'ombres, pas d'emojis : des monogrammes, des dates façon tableau d'affichage et des filets noirs.
+Le geste signature : chaque club est représenté par son écharpe tricotée, dessinée en code (rayures, mailles, lettrage, franges).
+Fond laine `#F6EDE0`, encre brune `#2B1A12`, braise `#E2462B` pour l'action, soleil `#FFB420` pour la mobilisation. Typo Bricolage Grotesque. Coins arrondis, ombres douces.
