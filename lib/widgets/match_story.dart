@@ -51,8 +51,8 @@ class MatchStory extends StatelessWidget {
             Positioned(
               left: 28,
               right: 28,
-              top: 246,
-              bottom: 68,
+              top: 236,
+              bottom: 60,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -61,7 +61,7 @@ class MatchStory extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('on y va ensemble ?', style: fz(fontSize: 17, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis)),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 8),
                         Flexible(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
@@ -77,16 +77,17 @@ class MatchStory extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 14),
                         Text(matchWhen(e), style: fz(fontSize: 19, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis, height: 1.25)),
                         const SizedBox(height: 4),
                         Text(e.venue, maxLines: 2, style: fz(fontSize: 16, color: FanZoneColors.wallDeep, height: 1.3)),
-                        const SizedBox(height: 16),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+                        const SizedBox(height: 12),
+                        Row(
                           children: [
-                            if (e.level.isNotEmpty) _Tag(e.level),
+                            if (e.level.isNotEmpty) ...[
+                              Flexible(child: _Tag(e.level)),
+                              const SizedBox(width: 8),
+                            ],
                             _Tag(e.free ? 'entrée libre' : (e.price == null ? 'entrée payante' : '${_price(e.price!)} l\'entrée')),
                           ],
                         ),
@@ -148,7 +149,12 @@ class _Tag extends StatelessWidget {
         color: FanZoneColors.cream.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(99),
       ),
-      child: Text(text, style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: FanZoneColors.cream)),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: FanZoneColors.cream),
+      ),
     );
   }
 }
