@@ -67,6 +67,7 @@ class _StoryScreenState extends State<StoryScreen> {
       appBar: AppBar(
         backgroundColor: FanZoneColors.night,
         foregroundColor: FanZoneColors.cream,
+        iconTheme: const IconThemeData(color: FanZoneColors.cream),
         surfaceTintColor: Colors.transparent,
         title: Text('Ta story', style: fzDisplay(fontSize: 24, color: FanZoneColors.cream)),
       ),

@@ -31,18 +31,18 @@ class MatchStory extends StatelessWidget {
           clipBehavior: Clip.hardEdge,
           children: [
             Positioned(
-              top: 118,
-              left: -60,
-              right: -60,
+              top: 162,
+              left: -80,
+              right: -80,
               child: Transform.rotate(
                 angle: 0.09,
                 child: Opacity(opacity: 0.9, child: Scarf.club(FanZoneColors.hiVis, height: 34, fringe: false)),
               ),
             ),
             Positioned(
-              top: 64,
-              left: -40,
-              right: -40,
+              top: 104,
+              left: -80,
+              right: -80,
               child: Transform.rotate(
                 angle: -0.12,
                 child: Scarf.club(e.color, label: clubLabel, height: 64, fringe: false),
@@ -51,8 +51,8 @@ class MatchStory extends StatelessWidget {
             Positioned(
               left: 28,
               right: 28,
-              top: 216,
-              bottom: 28,
+              top: 262,
+              bottom: 76,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -68,6 +68,15 @@ class MatchStory extends StatelessWidget {
                   Text(matchWhen(e), style: fz(fontSize: 19, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis, height: 1.25)),
                   const SizedBox(height: 4),
                   Text(e.venue, style: fz(fontSize: 16, color: FanZoneColors.wallDeep, height: 1.3)),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (e.level.isNotEmpty) _Tag(e.level),
+                      _Tag(e.free ? 'entrée libre' : (e.price == null ? 'entrée payante' : '${_price(e.price!)} l\'entrée')),
+                    ],
+                  ),
                   const Spacer(),
                   Text(supporters, style: fz(fontSize: 14, color: FanZoneColors.cream)),
                   const SizedBox(height: 8),
@@ -105,6 +114,25 @@ class MatchStory extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+String _price(double p) => p == p.roundToDouble() ? '${p.toInt()} €' : '${p.toStringAsFixed(2).replaceAll('.', ',')} €';
+
+class _Tag extends StatelessWidget {
+  final String text;
+  const _Tag(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: FanZoneColors.cream.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Text(text, style: fz(fontSize: 13, fontWeight: FontWeight.w700, color: FanZoneColors.cream)),
     );
   }
 }
