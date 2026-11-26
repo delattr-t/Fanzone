@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/m/:id", "destination": "/api/match?id=:id" },
+    { "source": "/og/:id.png", "destination": "/api/og?id=:id" }
+  ],
+  "redirects": [
+    { "source": "/", "destination": "https://delattr-t.github.io/Fanzone/", "permanent": false }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "fanzone-share",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vercel/og": "^0.11.1"
+  }
+}
