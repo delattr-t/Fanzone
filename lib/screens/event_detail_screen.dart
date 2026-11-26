@@ -5,6 +5,7 @@ import '../models/sound_gear.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/scarf.dart';
+import '../widgets/share_sheet.dart';
 import '../widgets/sticker.dart';
 import 'chat_view.dart';
 import 'clubs_screen.dart';
@@ -55,6 +56,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Partager le match',
+            icon: const Icon(Icons.ios_share_rounded),
+            onPressed: () => showShareSheet(context, ev),
+          ),
           if (club != null)
             Padding(
               padding: const EdgeInsets.only(right: 12),
@@ -327,6 +333,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               fontSize: 16,
               onTap: ev.isPast ? null : widget.onToggleJoin,
             ),
+            if (!ev.isPast) ...[
+              const SizedBox(height: 10),
+              StickerButton(
+                label: 'Ramène tes potes',
+                color: FanZoneColors.ink,
+                outlined: true,
+                fontSize: 16,
+                onTap: () => showShareSheet(context, ev),
+              ),
+            ],
             const SizedBox(height: 32),
           ],
         ),

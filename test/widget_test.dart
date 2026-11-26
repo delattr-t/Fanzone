@@ -1,6 +1,9 @@
 import 'package:fanzone/data/local_repository.dart';
 import 'package:fanzone/data/local_store.dart';
+import 'package:fanzone/models/event.dart';
+import 'package:fanzone/screens/create_event_screen.dart';
 import 'package:fanzone/state/app_state.dart';
+import 'package:fanzone/widgets/share_sheet.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _MemoryStore implements FanZoneStore {
@@ -83,5 +86,21 @@ void main() {
     await state2.load();
     expect(state2.eventById(ev.id)!.supporters, 1);
     expect(state2.eventById(ev.id)!.joined, isTrue);
+  });
+
+  test('lien de partage : aller-retour vers l\'identifiant du match', () {
+    final ev = buildSampleEvents().first;
+    final link = matchLink(ev);
+    expect(link, endsWith('#/match/${ev.id}'));
+    expect(matchIdFromUri(Uri.parse(link)), ev.id);
+    expect(matchIdFromUri(Uri.parse('https://exemple.fr/#/')), isNull);
+    expect(matchIdFromUri(Uri.parse('https://exemple.fr/?typo=gazette#/match/12')), 12);
+    expect(matchInvite(ev), contains(link));
+  });
+
+  test('le type de lieu suit le sport choisi', () {
+    expect(venueKindForSport('Basketball'), 'gymnase');
+    expect(venueKindForSport('Trail'), 'route');
+    expect(venueKindForSport('Football'), 'stade');
   });
 }
