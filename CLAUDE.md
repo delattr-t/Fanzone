@@ -36,7 +36,7 @@ de rejoindre des collectifs de supporters et de s'organiser (chat, chants, rôle
 ```
 lib/
 ├── main.dart                        # FanZoneApp, _AuthGate, MainShell, bottom nav
-├── config.dart                      # AppConfig : useSupabase, URL, clé publishable, shareBaseUrl
+├── config.dart                      # AppConfig : useSupabase, URL, clé publishable, shareBaseUrl, shareServiceUrl
 ├── data/
 │   ├── repository.dart              # FanZoneRepository (interface) + DataSnapshot
 │   ├── local_repository.dart        # Impl. locale (démo + blob JSON)
@@ -64,16 +64,19 @@ lib/
 │   ├── chants_view.dart             # Podium, vote, proposition de chant
 │   ├── roles_view.dart              # Choix d'un rôle (1 par membre, capacité par rôle)
 │   ├── alerts_screen.dart           # Centre d'alertes in-app
+│   ├── story_screen.dart            # « Ta story » : aperçu + export PNG 1080x1920 (share_plus, téléchargement sur ordinateur)
 │   └── profile_screen.dart          # Profil, mes events/collectifs/clubs, reset
 ├── widgets/
 │   ├── event_card.dart              # Card event, JoinPill, CrowdDots
-│   ├── share_sheet.dart             # Panneau « Ramène tes potes » + liens `#/match/<id>` (matchLink, matchIdFromUri)
+│   ├── share_sheet.dart             # Panneau « Ramène tes potes » (WhatsApp, Story, Facebook, SMS, X, copier, autres applis) + liens (shareUrl, matchLink, matchIdFromUri)
+│   ├── match_story.dart             # MatchStory : la story 9:16 d'un match (écharpe du club, date, jauge, lien)
 │   ├── scarf.dart                   # Scarf : l'écharpe tricotée (geste signature)
 │   └── sticker.dart                 # StickerBlock/Label/Button/Pill/Field, EmptyHint, showFanToast
 └── theme/app_theme.dart             # FanZoneColors + AppTheme
-test/widget_test.dart                # 5 tests unitaires (AppState via LocalRepository + liens de partage)
+test/widget_test.dart                # 7 tests unitaires (AppState via LocalRepository, liens de partage, type de lieu)
 web/                                 # index.html (écran de chargement, balises Open Graph), manifest, icônes, og.png
 tool/branding/                       # scarf.py + icon.py : génèrent l'icône (deux écharpes croisées) en Python
+share/                               # Service Vercel d'aperçu : /m/<id> (balises Open Graph + redirection) et /og/<id>.png (image générée)
 ```
 
 ---
@@ -146,6 +149,13 @@ l'écharpe tricotée aux couleurs du club ; c'est le geste signature de l'app.
 - Collectifs : rejoindre, chat membres, chants (proposer / voter / podium), rôles (1 par membre, capacité).
 - Partage : bouton sur la fiche match et l'affiche d'accueil ; le lien `https://delattr-t.github.io/Fanzone/#/match/<id>`
   ouvre directement la fiche (lu dans `main()`, ouvert par `MainShell` après connexion).
+  Panneau : WhatsApp, SMS, Facebook (sharer), X (intent), copier, menu natif sur téléphone, et **Story** :
+  image 1080x1920 rendue depuis `MatchStory` (RepaintBoundary.toImage) puis partagée via `share_plus`
+  (sur ordinateur, `share_plus` la télécharge). Les liens passent par `shareUrl()` : si
+  `AppConfig.shareServiceUrl` est renseigné, ils pointent vers `<service>/m/<id>` (aperçu propre au match).
+- Service d'aperçu `share/` (Vercel, fonctions edge) : lit le match dans Supabase (clé publishable), renvoie
+  les balises Open Graph et une image générée par `@vercel/og`, puis redirige vers l'app. Supabase ne peut pas
+  servir ces pages : ses fonctions réécrivent le HTML en texte brut sans domaine personnalisé.
 - Alertes in-app : nouvel event publié, club suivi, rappel J-1/jour J des events rejoints. Badge sur la cloche.
 - Profil : prénom éditable, stats, mes events / collectifs (avec rôle) / clubs, reset complet.
 
@@ -173,6 +183,8 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - `f10fdc5` écran Profil
 - `5d34a7c` intégration Firebase (non finalisée, retirée ensuite)
 - `0cc1bfa` CLAUDE.md
+- **v1.7 (26 nov. 2026)** — partage vers les réseaux : story Instagram générée par l'app (1080x1920), Facebook, X,
+  menu natif du téléphone ; service d'aperçu par match (`share/`, Vercel) prêt à être mis en ligne.
 - **v1.6 (26 nov. 2026)** — partage d'un match (WhatsApp, SMS, copie) avec lien direct `#/match/<id>`
   qui ouvre la fiche, icône « écharpes croisées » (web + Android), écran de démarrage brun nuit,
   aperçu riche des liens (Open Graph), formulaire de création refait en 4 étapes avec aperçu en direct.
@@ -195,6 +207,9 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - [ ] Géocodage des adresses à la création d'event (aujourd'hui : position ≈ celle du club)
 - [x] Partage d'un match par lien direct (v1.6)
 - [x] Icône + écran de démarrage (v1.6)
+- [x] Story Instagram, Facebook, X, menu natif (v1.7)
+- [ ] Mettre en ligne le service `share/` sur Vercel (import du dépôt, Root Directory `share`) puis renseigner `AppConfig.shareServiceUrl`
+- [ ] Compteur « supporters ramenés » (paramètre `ref` dans les liens)
 - [ ] Screenshots stores
 
 ### Backend

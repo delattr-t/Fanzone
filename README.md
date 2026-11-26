@@ -38,7 +38,8 @@ flutter test
 - 🎟️ **Fiche event** : accroche, lieu + adresse, jauge de mobilisation, collectifs présents,
   matériel sonore autorisé / interdit, after-match, chat réservé aux participants
 - 📣 **Organiser un match** en 4 étapes (qui joue, quand et où, l'ambiance, et après), avec l'aperçu de la carte en direct
-- 🔗 **Partager un match** par WhatsApp, SMS ou lien copié : le lien ouvre directement la fiche du match
+- 🔗 **Partager un match** par WhatsApp, SMS, Facebook, X ou lien copié : le lien ouvre directement la fiche du match
+- 📸 **Story** : l'app génère l'affiche du match en format story (1080x1920) à publier sur Instagram ou Snapchat
 - 🏅 **Clubs** : suivre un club → alerte à chaque nouvel event
 - 🎊 **Collectifs** : chat des membres, chants (proposer, voter, podium), rôles dans la tribune
 - 🔔 **Alertes** : nouveaux events, rappel la veille

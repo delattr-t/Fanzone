@@ -103,4 +103,11 @@ void main() {
     expect(venueKindForSport('Trail'), 'route');
     expect(venueKindForSport('Football'), 'stade');
   });
+
+  test('lien de partage : passe par le service d\'aperçu quand il est configuré', () {
+    final ev = buildSampleEvents().first;
+    expect(shareUrl(ev, service: ''), matchLink(ev));
+    expect(shareUrl(ev, service: 'https://fz.example'), 'https://fz.example/m/${ev.id}');
+    expect(shareUrl(ev, service: 'https://fz.example/'), 'https://fz.example/m/${ev.id}');
+  });
 }
