@@ -61,7 +61,6 @@ class _StoryScreenState extends State<StoryScreen> {
   Widget build(BuildContext context) {
     final e = widget.event;
     final club = AppScope.of(context).clubById(e.clubId);
-    final onPhone = nativeShareAvailable;
 
     return Scaffold(
       backgroundColor: FanZoneColors.night,
@@ -111,7 +110,7 @@ class _StoryScreenState extends State<StoryScreen> {
                   ),
                   const SizedBox(height: 14),
                   StickerButton(
-                    label: _busy ? 'Préparation…' : (onPhone ? 'Partager l\'image' : 'Télécharger l\'image'),
+                    label: _busy ? 'Préparation…' : 'Partager l\'image',
                     color: FanZoneColors.flare,
                     fontSize: 16,
                     onTap: _busy ? null : _share,
