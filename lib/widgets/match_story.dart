@@ -31,7 +31,7 @@ class MatchStory extends StatelessWidget {
           clipBehavior: Clip.hardEdge,
           children: [
             Positioned(
-              top: 162,
+              top: 150,
               left: -80,
               right: -80,
               child: Transform.rotate(
@@ -40,7 +40,7 @@ class MatchStory extends StatelessWidget {
               ),
             ),
             Positioned(
-              top: 104,
+              top: 92,
               left: -80,
               right: -80,
               child: Transform.rotate(
@@ -51,33 +51,49 @@ class MatchStory extends StatelessWidget {
             Positioned(
               left: 28,
               right: 28,
-              top: 262,
-              bottom: 76,
+              top: 246,
+              bottom: 68,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('on y va ensemble ?', style: fz(fontSize: 17, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis)),
-                  const SizedBox(height: 10),
-                  Text(
-                    e.match,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: fzDisplay(fontSize: titleSize, color: FanZoneColors.cream, height: 1.02),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('on y va ensemble ?', style: fz(fontSize: 17, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis)),
+                        const SizedBox(height: 10),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.topLeft,
+                            child: SizedBox(
+                              width: size.width - 56,
+                              child: Text(
+                                e.match,
+                                maxLines: 4,
+                                overflow: TextOverflow.ellipsis,
+                                style: fzDisplay(fontSize: titleSize, color: FanZoneColors.cream, height: 1.02),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(matchWhen(e), style: fz(fontSize: 19, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis, height: 1.25)),
+                        const SizedBox(height: 4),
+                        Text(e.venue, maxLines: 2, style: fz(fontSize: 16, color: FanZoneColors.wallDeep, height: 1.3)),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (e.level.isNotEmpty) _Tag(e.level),
+                            _Tag(e.free ? 'entrée libre' : (e.price == null ? 'entrée payante' : '${_price(e.price!)} l\'entrée')),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 18),
-                  Text(matchWhen(e), style: fz(fontSize: 19, fontWeight: FontWeight.w700, color: FanZoneColors.hiVis, height: 1.25)),
-                  const SizedBox(height: 4),
-                  Text(e.venue, style: fz(fontSize: 16, color: FanZoneColors.wallDeep, height: 1.3)),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (e.level.isNotEmpty) _Tag(e.level),
-                      _Tag(e.free ? 'entrée libre' : (e.price == null ? 'entrée payante' : '${_price(e.price!)} l\'entrée')),
-                    ],
-                  ),
-                  const Spacer(),
                   Text(supporters, style: fz(fontSize: 14, color: FanZoneColors.cream)),
                   const SizedBox(height: 8),
                   ClipRRect(
