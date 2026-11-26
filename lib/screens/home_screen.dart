@@ -5,6 +5,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/event_card.dart';
 import '../widgets/scarf.dart';
+import '../widgets/share_sheet.dart';
 import '../widgets/sticker.dart';
 import 'alerts_screen.dart';
 import 'clubs_screen.dart';
@@ -357,6 +358,22 @@ class _Poster extends StatelessWidget {
                           style: fz(fontSize: 13, height: 1.25, color: FanZoneColors.cream.withValues(alpha: 0.8)),
                         ),
                       ),
+                      Tooltip(
+                        message: 'Partager le match',
+                        child: Pressable(
+                          onTap: () => showShareSheet(context, e),
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: FanZoneColors.cream.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.ios_share_rounded, size: 20, color: FanZoneColors.cream),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       JoinPill(joined: mine, onTap: onJoin, onDark: true),
                     ],
                   ),

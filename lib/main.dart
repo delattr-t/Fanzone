@@ -17,6 +17,9 @@ import 'screens/map_screen.dart';
 import 'screens/profile_screen.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
+import 'screens/event_detail_screen.dart';
+import 'widgets/scarf.dart';
+import 'widgets/share_sheet.dart';
 import 'widgets/sticker.dart';
 
 void main() async {
@@ -32,12 +35,16 @@ void main() async {
   } else {
     repo = LocalRepository(LocalStore());
   }
+  _pendingMatchId = matchIdFromUri(Uri.base);
   fanZoneType.value = await _initialTypography();
   await loadTypography(fanZoneType.value);
   final state = AppState(repo);
   await state.load();
   runApp(FanZoneApp(state: state));
 }
+
+/// Match demandé par un lien partagé (`#/match/<id>`), ouvert une fois l'app prête.
+int? _pendingMatchId;
 
 Future<FanZoneType> _initialTypography() async {
   final fromUrl = Uri.base.queryParameters['typo'];
@@ -74,6 +81,7 @@ class FanZoneApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        initialRoute: '/',
         home: const _AuthGate(),
           ),
         ),
@@ -98,9 +106,22 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: FanZoneColors.ink,
-      body: Center(child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(color: FanZoneColors.hiVis, strokeWidth: 2))),
+    return Scaffold(
+      backgroundColor: FanZoneColors.night,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(width: 220, child: Scarf.club(FanZoneColors.flare, label: 'FanZone', height: 48)),
+            const SizedBox(height: 22),
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(color: FanZoneColors.hiVis, strokeWidth: 2.5),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -116,6 +137,27 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
   String? _shownError;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openPendingMatch());
+  }
+
+  void _openPendingMatch() {
+    final id = _pendingMatchId;
+    if (id == null || !mounted) return;
+    _pendingMatchId = null;
+    final ev = AppScope.read(context).eventById(id);
+    if (ev == null) {
+      showFanToast(context, 'Ce match n\'existe plus, voici les autres.');
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EventDetailScreen(event: ev, onToggleJoin: () => _toggleJoin(ev.id))),
+    );
+  }
 
   @override
   void didChangeDependencies() {

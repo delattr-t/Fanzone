@@ -36,7 +36,7 @@ de rejoindre des collectifs de supporters et de s'organiser (chat, chants, rôle
 ```
 lib/
 ├── main.dart                        # FanZoneApp, _AuthGate, MainShell, bottom nav
-├── config.dart                      # AppConfig : useSupabase, URL, clé publishable
+├── config.dart                      # AppConfig : useSupabase, URL, clé publishable, shareBaseUrl
 ├── data/
 │   ├── repository.dart              # FanZoneRepository (interface) + DataSnapshot
 │   ├── local_repository.dart        # Impl. locale (démo + blob JSON)
@@ -56,7 +56,7 @@ lib/
 │   ├── map_screen.dart              # Carte OSM + pins + géoloc
 │   ├── agenda_screen.dart           # Calendrier mensuel + liste
 │   ├── event_detail_screen.dart     # Fiche event complète + EventChatScreen
-│   ├── create_event_screen.dart     # Formulaire création d'event
+│   ├── create_event_screen.dart     # « Organiser un match » : 4 étapes + aperçu en direct de la carte
 │   ├── clubs_screen.dart            # ClubsScreen (liste, suivre) + ClubDetailScreen
 │   ├── collectifs_screen.dart       # Liste des collectifs
 │   ├── collectif_detail_screen.dart # Onglets Chat / Chants / Rôles
@@ -67,10 +67,13 @@ lib/
 │   └── profile_screen.dart          # Profil, mes events/collectifs/clubs, reset
 ├── widgets/
 │   ├── event_card.dart              # Card event, JoinPill, CrowdDots
+│   ├── share_sheet.dart             # Panneau « Ramène tes potes » + liens `#/match/<id>` (matchLink, matchIdFromUri)
 │   ├── scarf.dart                   # Scarf : l'écharpe tricotée (geste signature)
 │   └── sticker.dart                 # StickerBlock/Label/Button/Pill/Field, EmptyHint, showFanToast
 └── theme/app_theme.dart             # FanZoneColors + AppTheme
-test/widget_test.dart                # 4 tests unitaires sur AppState via LocalRepository
+test/widget_test.dart                # 5 tests unitaires (AppState via LocalRepository + liens de partage)
+web/                                 # index.html (écran de chargement, balises Open Graph), manifest, icônes, og.png
+tool/branding/                       # scarf.py + icon.py : génèrent l'icône (deux écharpes croisées) en Python
 ```
 
 ---
@@ -141,6 +144,8 @@ l'écharpe tricotée aux couleurs du club ; c'est le geste signature de l'app.
   + note selon le lieu, after-match, chat réservé aux participants), création d'event complète.
 - Clubs : liste, fiche, suivre/ne plus suivre → alertes, section « Tes clubs jouent » sur l'accueil.
 - Collectifs : rejoindre, chat membres, chants (proposer / voter / podium), rôles (1 par membre, capacité).
+- Partage : bouton sur la fiche match et l'affiche d'accueil ; le lien `https://delattr-t.github.io/Fanzone/#/match/<id>`
+  ouvre directement la fiche (lu dans `main()`, ouvert par `MainShell` après connexion).
 - Alertes in-app : nouvel event publié, club suivi, rappel J-1/jour J des events rejoints. Badge sur la cloche.
 - Profil : prénom éditable, stats, mes events / collectifs (avec rôle) / clubs, reset complet.
 
@@ -168,6 +173,9 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - `f10fdc5` écran Profil
 - `5d34a7c` intégration Firebase (non finalisée, retirée ensuite)
 - `0cc1bfa` CLAUDE.md
+- **v1.6 (26 nov. 2026)** — partage d'un match (WhatsApp, SMS, copie) avec lien direct `#/match/<id>`
+  qui ouvre la fiche, icône « écharpes croisées » (web + Android), écran de démarrage brun nuit,
+  aperçu riche des liens (Open Graph), formulaire de création refait en 4 étapes avec aperçu en direct.
 - **v1.5 (25 nov. 2026)** — deuxième jeu typographique « Gazette » (Caprasimo, Atkinson Hyperlegible, Jersey 15), au choix.
 - **v1.4 (25 nov. 2026)** — design « Écharpe » (chaleureux) ; carte réparée (CARTO exigeait une clé → OSM).
 - **v1.3 (24 nov. 2026)** — design « Affiche de match » (remplacé par la v1.4).
@@ -185,8 +193,9 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 ### Court terme
 - [ ] Tester sur téléphone Android (USB puis APK) et faire tester à 3-5 personnes
 - [ ] Géocodage des adresses à la création d'event (aujourd'hui : position ≈ celle du club)
-- [ ] Partage d'event (share_plus)
-- [ ] Icône + splash + screenshots stores
+- [x] Partage d'un match par lien direct (v1.6)
+- [x] Icône + écran de démarrage (v1.6)
+- [ ] Screenshots stores
 
 ### Backend
 - [x] Supabase branché (v1.2)

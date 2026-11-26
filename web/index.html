@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Les matchs de sport amateur du coin, et les collectifs de supporters pour y aller ensemble.">
+  <meta name="theme-color" content="#2B1A12">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FanZone">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="FanZone, on y va ensemble ?">
+  <meta property="og:description" content="Les matchs du coin, et les collectifs pour y aller ensemble.">
+  <meta property="og:url" content="https://delattr-t.github.io/Fanzone/">
+  <meta property="og:image" content="https://delattr-t.github.io/Fanzone/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://delattr-t.github.io/Fanzone/og.png">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="FanZone">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>FanZone</title>
+
+  <style>
+    html, body { margin: 0; height: 100%; background: #2B1A12; }
+    #fz-splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      background: #2B1A12; transition: opacity 220ms ease-out; z-index: 10;
+    }
+    #fz-splash img { width: 112px; height: 112px; border-radius: 28px; }
+    #fz-splash p {
+      margin: 0; color: #D6BEA8; letter-spacing: .02em;
+      font: 600 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    #fz-splash .knit { display: flex; gap: 6px; }
+    #fz-splash .knit i {
+      width: 8px; height: 8px; border-radius: 50%; background: #FFB420; opacity: .25;
+      animation: fz-knit 900ms ease-in-out infinite;
+    }
+    #fz-splash .knit i:nth-child(2) { animation-delay: 150ms; background: #E2462B; }
+    #fz-splash .knit i:nth-child(3) { animation-delay: 300ms; background: #FFF3E0; }
+    @keyframes fz-knit { 50% { opacity: 1; transform: translateY(-3px); } }
+    @media (prefers-reduced-motion: reduce) { #fz-splash .knit i { animation: none; opacity: .8; } }
+    #fz-splash.gone { opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="fz-splash" aria-label="FanZone se charge">
+    <img src="icons/Icon-192.png" alt="">
+    <p>on tricote les écharpes</p>
+    <div class="knit"><i></i><i></i><i></i></div>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('fz-splash');
+      if (!s) return;
+      s.classList.add('gone');
+      setTimeout(function () { s.remove(); }, 260);
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

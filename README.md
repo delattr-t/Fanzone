@@ -37,7 +37,8 @@ flutter test
 - 🗺️ **Carte** OpenStreetMap avec géolocalisation · 📅 **Agenda** mensuel
 - 🎟️ **Fiche event** : accroche, lieu + adresse, jauge de mobilisation, collectifs présents,
   matériel sonore autorisé / interdit, after-match, chat réservé aux participants
-- 📣 **Créer un event** : club, sport, adversaire, niveau, date/heure, lieu, capacité, gratuit/payant, after, matériel
+- 📣 **Organiser un match** en 4 étapes (qui joue, quand et où, l'ambiance, et après), avec l'aperçu de la carte en direct
+- 🔗 **Partager un match** par WhatsApp, SMS ou lien copié : le lien ouvre directement la fiche du match
 - 🏅 **Clubs** : suivre un club → alerte à chaque nouvel event
 - 🎊 **Collectifs** : chat des membres, chants (proposer, voter, podium), rôles dans la tribune
 - 🔔 **Alertes** : nouveaux events, rappel la veille

@@ -9,4 +9,7 @@ class AppConfig {
   static const bool useSupabase = true;
   static const String supabaseUrl = 'https://lizbzscnskvsszoiszlt.supabase.co';
   static const String supabaseKey = 'sb_publishable_KGqY-LB3tStz_GIsInz3lA_rJmU9kEl';
+
+  /// Adresse publique de l'app web : base des liens de partage (`#/match/<id>`).
+  static const String shareBaseUrl = 'https://delattr-t.github.io/Fanzone/';
 }
