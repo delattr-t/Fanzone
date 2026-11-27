@@ -184,7 +184,7 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - `5d34a7c` intégration Firebase (non finalisée, retirée ensuite)
 - `0cc1bfa` CLAUDE.md
 - **v1.7 (26 nov. 2026)** — partage vers les réseaux : story Instagram générée par l'app (1080x1920), Facebook, X,
-  menu natif du téléphone ; service d'aperçu par match (`share/`, Vercel) prêt à être mis en ligne.
+  menu natif du téléphone ; service d'aperçu par match en ligne (https://fanzone-share.vercel.app/m/<id>).
 - **v1.6 (26 nov. 2026)** — partage d'un match (WhatsApp, SMS, copie) avec lien direct `#/match/<id>`
   qui ouvre la fiche, icône « écharpes croisées » (web + Android), écran de démarrage brun nuit,
   aperçu riche des liens (Open Graph), formulaire de création refait en 4 étapes avec aperçu en direct.
@@ -208,7 +208,7 @@ Correctifs connus : se placer dans le bon dossier avant `flutter pub get` ; `flu
 - [x] Partage d'un match par lien direct (v1.6)
 - [x] Icône + écran de démarrage (v1.6)
 - [x] Story Instagram, Facebook, X, menu natif (v1.7)
-- [ ] Mettre en ligne le service `share/` sur Vercel (import du dépôt, Root Directory `share`) puis renseigner `AppConfig.shareServiceUrl`
+- [x] Service `share/` en ligne : https://fanzone-share.vercel.app (projet Vercel `fanzone-share`, importé du dépôt, Root Directory `share`, redéployé à chaque push sur `main`)
 - [ ] Compteur « supporters ramenés » (paramètre `ref` dans les liens)
 - [ ] Screenshots stores
 

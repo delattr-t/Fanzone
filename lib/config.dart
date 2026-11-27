@@ -14,6 +14,6 @@ class AppConfig {
   static const String shareBaseUrl = 'https://delattr-t.github.io/Fanzone/';
 
   /// Service d'aperçu (dossier `share/`, hébergé sur Vercel) : `/m/<id>` montre l'aperçu du
-  /// match aux réseaux sociaux puis redirige vers l'app. Vide tant qu'il n'est pas en ligne.
-  static const String shareServiceUrl = '';
+  /// match aux réseaux sociaux puis redirige vers l'app. Vide = liens directs vers l'app.
+  static const String shareServiceUrl = 'https://fanzone-share.vercel.app';
 }
