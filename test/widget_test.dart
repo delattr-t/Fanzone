@@ -95,7 +95,7 @@ void main() {
     expect(matchIdFromUri(Uri.parse(link)), ev.id);
     expect(matchIdFromUri(Uri.parse('https://exemple.fr/#/')), isNull);
     expect(matchIdFromUri(Uri.parse('https://exemple.fr/?typo=gazette#/match/12')), 12);
-    expect(matchInvite(ev), contains(link));
+    expect(matchInvite(ev), contains(shareUrl(ev)));
   });
 
   test('le type de lieu suit le sport choisi', () {
